@@ -292,6 +292,14 @@ module Wrappers
       end
     end
 
+    def assert_vehicle_tw_if_schedule(vrp)
+      !vrp.preprocessing_use_periodic_heuristic ||
+      (!vrp.schedule_range_indices && !vrp.schedule_range_date || vrp[:vehicles].all?{ |vehicle|
+        vehicle[:timewindow] && vehicle[:timewindow][:start] && vehicle[:timewindow][:end] ||
+        vehicle[:sequence_timewindows] && vehicle[:sequence_timewindows].any?{ |tw| tw[:start] && tw[:end] }
+      })
+    end
+
     def solve_synchronous?(vrp)
       false
     end

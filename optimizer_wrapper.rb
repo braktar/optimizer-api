@@ -140,7 +140,7 @@ module OptimizerWrapper
     }
     adjust_vehicles_duration(vrp)
 
-    if vrp[:matrices] == nil && (vrp.vehicles.select{ |v| v.overall_duration }.size > 0 || vrp.relations.select{ |r| r.type == 'vehicle_group_duration' }.size > 0)
+    if (vrp[:matrices] == nil || vrp[:matrices].empty?) && (vrp.vehicles.select{ |v| v.overall_duration }.size > 0 || vrp.relations.select{ |r| r.type == 'vehicle_group_duration' }.size > 0 || vrp.schedule_range_indices || vrp.schedule_range_date)
       vrp_need_matrix = compute_vrp_need_matrix(vrp)
       vrp = compute_need_matrix(vrp, vrp_need_matrix)
     end
@@ -152,6 +152,7 @@ module OptimizerWrapper
     else
       if config[:solve_synchronously] || (services_vrps.size == 1 && !vrp.preprocessing_cluster_threshold && config[:services][services_vrps[0][:service]].solve_synchronous?(vrp))
         complete_services_vrp = services_vrps.collect{ |service_vrp|
+          Interpreters::PeriodicVisits.initialize
           service_vrp[:vrp] = Interpreters::PeriodicVisits.expand(service_vrp[:vrp])
           Interpreters::SplitClustering.split_clusters([service_vrp])
         }.flatten
@@ -166,7 +167,6 @@ module OptimizerWrapper
   end
 
   def self.solve(services_vrps, services_fleets = [], job = nil, &block)
-
     real_result = join_vrps(services_vrps, block) { |service, vrp, fleet_id, problem_size, block|
       cluster_result = nil
       if vrp.services.empty? && vrp.shipments.empty?
@@ -217,6 +217,9 @@ module OptimizerWrapper
             vrp = compute_need_matrix(vrp, vrp_need_matrix)
           end
           @unfeasible_services = config[:services][service].check_distances(vrp, @unfeasible_services)
+          vrp[:rejected_by_periodic].to_a.each{ |rejected_service, reason|
+            @unfeasible_services[rejected_service] = reason
+          }
 
           File.write('test/fixtures/' + ENV['DUMP_VRP'].gsub(/[^a-z0-9\-]+/i, '_') + '.dump', Base64.encode64(Marshal::dump(vrp))) if ENV['DUMP_VRP']
 
@@ -241,7 +244,7 @@ module OptimizerWrapper
               parse_result(cluster_vrp, result)
             elsif result.class.name == 'String' # result.is_a?(String) not working
               raise RuntimeError.new(result) unless result == "Job killed"
-            else
+            elsif !vrp.preprocessing_heuristic_result || vrp.preprocessing_heuristic_result.empty?
               raise RuntimeError.new('No solution provided')
             end
           end
@@ -289,7 +292,11 @@ module OptimizerWrapper
           }
         }
       end
-      cluster_result
+      if vrp.preprocessing_heuristic_result && !vrp.preprocessing_heuristic_result.empty?
+        [cluster_result || vrp.preprocessing_heuristic_result, vrp.preprocessing_heuristic_result].sort_by{ |sol| sol[:cost] }[0]
+      else
+        cluster_result
+      end
     }
     if job
       p = Result.get(job) || {}
@@ -918,6 +925,7 @@ module OptimizerWrapper
       services_vrps = Marshal.load(Base64.decode64(options['services_vrps']))
       services_fleets = Marshal.load(Base64.decode64(options['services_fleets']))
       complete_services_vrp = services_vrps.collect{ |service_vrp|
+        Interpreters::PeriodicVisits.initialize
         service_vrp[:vrp] = Interpreters::PeriodicVisits.expand(service_vrp[:vrp])
         Interpreters::SplitClustering.split_clusters([service_vrp])
       }.flatten

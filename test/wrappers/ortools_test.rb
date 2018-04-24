@@ -5164,4 +5164,55 @@ class Wrappers::OrtoolsTest < Minitest::Test
     assert_equal [], result[:unassigned]
     assert_equal 0, result[:routes][0][:activities][1][:alternative]
   end
+
+  def test_same_service
+    problem = {
+      matrices: [{
+        id: 'matrix_0',
+        time: [
+          [0, 1, 1],
+          [1, 0, 1],
+          [1, 1, 0]
+        ]
+      }],
+      points: [{
+        id: 'depot',
+        matrix_index: 0
+      }, {
+        id: 'point_1',
+        matrix_index: 1
+      }],
+      vehicles: [{
+        id: 'voiture',
+        start_point_id: 'depot',
+        matrix_id: 'matrix_0',
+        timewindow: {
+          start: 10,
+          end: 12,
+        },
+      }],
+      services: [{
+        id: 'service_1',
+        activity: {
+          duration: 1,
+          point_id: 'point_1'
+        },
+        visits_number: 3
+      }],
+      configuration: {
+        resolution: {
+          duration: 1000,
+        },
+        schedule:{
+          range_indices:{
+            start: 0,
+            end: 2
+          }
+        },
+      }
+    }
+    result = OptimizerWrapper.wrapper_vrp('demo', {services: {vrp: [:ortools] }}, Models::Vrp.create(problem), nil)
+    assert result
+    assert_equal 0, result[:unassigned].size
+  end
 end

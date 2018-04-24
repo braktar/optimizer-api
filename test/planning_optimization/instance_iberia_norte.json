@@ -1,0 +1,1397 @@
+{
+    "vrp":
+    {
+        "units": [
+        {
+            "id": "nbr",
+            "label": "visites"
+        }],
+        "matrices": [],
+        "points": [
+        {
+            "id": "NORTE",
+            "location":
+            {
+                "lat": 43.5262,
+                "lon": -5.6835
+            }
+        },
+        {
+            "id": "0047",
+            "location":
+            {
+                "lat": 43.537,
+                "lon": -5.6959
+            }
+        },
+        {
+            "id": "1778",
+            "location":
+            {
+                "lat": 43.365,
+                "lon": -5.8523
+            }
+        },
+        {
+            "id": "1796",
+            "location":
+            {
+                "lat": 43.367,
+                "lon": -5.8493
+            }
+        },
+        {
+            "id": "2580",
+            "location":
+            {
+                "lat": 43.517,
+                "lon": -5.7062
+            }
+        },
+        {
+            "id": "2615",
+            "location":
+            {
+                "lat": 43.401,
+                "lon": -5.8106
+            }
+        },
+        {
+            "id": "2802",
+            "location":
+            {
+                "lat": 43.525,
+                "lon": -5.6780
+            }
+        },
+        {
+            "id": "3393",
+            "location":
+            {
+                "lat": 43.539,
+                "lon": -5.6551
+            }
+        },
+        {
+            "id": "4043",
+            "location":
+            {
+                "lat": 43.524,
+                "lon": -5.6632
+            }
+        },
+        {
+            "id": "5319",
+            "location":
+            {
+                "lat": 43.544,
+                "lon": -5.9447
+            }
+        },
+        {
+            "id": "5596",
+            "location":
+            {
+                "lat": 43.551,
+                "lon": -5.8736
+            }
+        },
+        {
+            "id": "5676",
+            "location":
+            {
+                "lat": 43.615,
+                "lon": -5.7969
+            }
+        },
+        {
+            "id": "5774",
+            "location":
+            {
+                "lat": 43.529,
+                "lon": -5.6440
+            }
+        },
+        {
+            "id": "5783",
+            "location":
+            {
+                "lat": 43.527,
+                "lon": -5.6671
+            }
+        },
+        {
+            "id": "5836",
+            "location":
+            {
+                "lat": 43.401,
+                "lon": -5.8106
+            }
+        },
+        {
+            "id": "6032",
+            "location":
+            {
+                "lat": 43.391,
+                "lon": -5.6589
+            }
+        },
+        {
+            "id": "6078",
+            "location":
+            {
+                "lat": 43.538,
+                "lon": -5.6640
+            }
+        },
+        {
+            "id": "6176",
+            "location":
+            {
+                "lat": 43.37,
+                "lon": -5.8312
+            }
+        },
+        {
+            "id": "6318",
+            "location":
+            {
+                "lat": 43.531,
+                "lon": -5.6328
+            }
+        },
+        {
+            "id": "6327",
+            "location":
+            {
+                "lat": 43.486,
+                "lon": -6.1120
+            }
+        },
+        {
+            "id": "6470",
+            "location":
+            {
+                "lat": 43.558,
+                "lon": -5.9290
+            }
+        },
+        {
+            "id": "6540",
+            "location":
+            {
+                "lat": 43.286,
+                "lon": -5.6435
+            }
+        },
+        {
+            "id": "7004",
+            "location":
+            {
+                "lat": 43.538,
+                "lon": -5.6539
+            }
+        },
+        {
+            "id": "7406",
+            "location":
+            {
+                "lat": 43.229,
+                "lon": -5.7802
+            }
+        },
+        {
+            "id": "7889",
+            "location":
+            {
+                "lat": 43.366,
+                "lon": -5.8716
+            }
+        },
+        {
+            "id": "8174",
+            "location":
+            {
+                "lat": 43.531,
+                "lon": -5.6448
+            }
+        },
+        {
+            "id": "3041",
+            "location":
+            {
+                "lat": 43.359,
+                "lon": -5.5064
+            }
+        },
+        {
+            "id": "0069",
+            "location":
+            {
+                "lat": 43.341,
+                "lon": -4.0294
+            }
+        },
+        {
+            "id": "0210",
+            "location":
+            {
+                "lat": 43.412,
+                "lon": -3.4145
+            }
+        },
+        {
+            "id": "0292",
+            "location":
+            {
+                "lat": 43.448,
+                "lon": -3.8622
+            }
+        },
+        {
+            "id": "0318",
+            "location":
+            {
+                "lat": 43.457,
+                "lon": -3.8145
+            }
+        },
+        {
+            "id": "0620",
+            "location":
+            {
+                "lat": 43.453,
+                "lon": -3.8219
+            }
+        },
+        {
+            "id": "0719",
+            "location":
+            {
+                "lat": 43.442,
+                "lon": -3.4607
+            }
+        },
+        {
+            "id": "0853",
+            "location":
+            {
+                "lat": 43.353,
+                "lon": -4.0464
+            }
+        },
+        {
+            "id": "1282",
+            "location":
+            {
+                "lat": 43.442,
+                "lon": -3.4557
+            }
+        },
+        {
+            "id": "1629",
+            "location":
+            {
+                "lat": 43.398,
+                "lon": -3.4427
+            }
+        },
+        {
+            "id": "1807",
+            "location":
+            {
+                "lat": 43.418,
+                "lon": -3.8458
+            }
+        },
+        {
+            "id": "2003",
+            "location":
+            {
+                "lat": 43.35,
+                "lon": -4.049
+            }
+        },
+        {
+            "id": "2012",
+            "location":
+            {
+                "lat": 43.408,
+                "lon": -3.4176
+            }
+        },
+        {
+            "id": "2147",
+            "location":
+            {
+                "lat": 43.46,
+                "lon": -3.8235
+            }
+        },
+        {
+            "id": "2192",
+            "location":
+            {
+                "lat": 43.448,
+                "lon": -3.8527
+            }
+        },
+        {
+            "id": "2307",
+            "location":
+            {
+                "lat": 43.26,
+                "lon": -4.0675
+            }
+        },
+        {
+            "id": "2557",
+            "location":
+            {
+                "lat": 43.395,
+                "lon": -3.8213
+            }
+        },
+        {
+            "id": "2593",
+            "location":
+            {
+                "lat": 43.461,
+                "lon": -3.8249
+            }
+        },
+        {
+            "id": "2977",
+            "location":
+            {
+                "lat": 43.457,
+                "lon": -3.8598
+            }
+        },
+        {
+            "id": "6562",
+            "location":
+            {
+                "lat": 43.46,
+                "lon": -3.8228
+            }
+        },
+        {
+            "id": "6795",
+            "location":
+            {
+                "lat": 43.322,
+                "lon": -3.8531
+            }
+        },
+        {
+            "id": "6811",
+            "location":
+            {
+                "lat": 43.472,
+                "lon": -3.8278
+            }
+        },
+        {
+            "id": "6820",
+            "location":
+            {
+                "lat": 43.441,
+                "lon": -3.905
+            }
+        },
+        {
+            "id": "8560",
+            "location":
+            {
+                "lat": 43.352,
+                "lon": -4.0586
+            }
+        },
+        {
+            "id": "8613",
+            "location":
+            {
+                "lat": 43.423,
+                "lon": -4.0387
+            }
+        },
+        {
+            "id": "8882",
+            "location":
+            {
+                "lat": 43.383,
+                "lon": -3.7385
+            }
+        },
+        {
+            "id": "5990",
+            "location":
+            {
+                "lat": 43.416,
+                "lon": -5.8085
+            }
+        },
+        {
+            "id": "0500",
+            "location":
+            {
+                "lat": 43.426,
+                "lon": -3.8436
+            }
+        }],
+        "services": [
+        {
+            "id": "0047",
+            "activity":
+            {
+                "point_id": "0047",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "1778",
+            "activity":
+            {
+                "point_id": "1778",
+                "duration": 1800.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "1796",
+            "activity":
+            {
+                "point_id": "1796",
+                "duration": 3180.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "2580",
+            "activity":
+            {
+                "point_id": "2580",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "2615",
+            "activity":
+            {
+                "point_id": "2615",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "2802",
+            "activity":
+            {
+                "point_id": "2802",
+                "duration": 3180.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "3393",
+            "activity":
+            {
+                "point_id": "3393",
+                "duration": 1800.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "4043",
+            "activity":
+            {
+                "point_id": "4043",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "5319",
+            "activity":
+            {
+                "point_id": "5319",
+                "duration": 3180.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "5596",
+            "activity":
+            {
+                "point_id": "5596",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "5676",
+            "activity":
+            {
+                "point_id": "5676",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "5774",
+            "activity":
+            {
+                "point_id": "5774",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "5783",
+            "activity":
+            {
+                "point_id": "5783",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "5836",
+            "activity":
+            {
+                "point_id": "5836",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "6032",
+            "activity":
+            {
+                "point_id": "6032",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "6078",
+            "activity":
+            {
+                "point_id": "6078",
+                "duration": 1800.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "6176",
+            "activity":
+            {
+                "point_id": "6176",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "6318",
+            "activity":
+            {
+                "point_id": "6318",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "6327",
+            "activity":
+            {
+                "point_id": "6327",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "6470",
+            "activity":
+            {
+                "point_id": "6470",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "6540",
+            "activity":
+            {
+                "point_id": "6540",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "7004",
+            "activity":
+            {
+                "point_id": "7004",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "7406",
+            "activity":
+            {
+                "point_id": "7406",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "7889",
+            "activity":
+            {
+                "point_id": "7889",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "8174",
+            "activity":
+            {
+                "point_id": "8174",
+                "duration": 1800.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "3041",
+            "activity":
+            {
+                "point_id": "3041",
+                "duration": 1980.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "0069",
+            "activity":
+            {
+                "point_id": "0069",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "0210",
+            "activity":
+            {
+                "point_id": "0210",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "0292",
+            "activity":
+            {
+                "point_id": "0292",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "0318",
+            "activity":
+            {
+                "point_id": "0318",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "0620",
+            "activity":
+            {
+                "point_id": "0620",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "0719",
+            "activity":
+            {
+                "point_id": "0719",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "0853",
+            "activity":
+            {
+                "point_id": "0853",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "1282",
+            "activity":
+            {
+                "point_id": "1282",
+                "duration": 900.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "1629",
+            "activity":
+            {
+                "point_id": "1629",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "1807",
+            "activity":
+            {
+                "point_id": "1807",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "2003",
+            "activity":
+            {
+                "point_id": "2003",
+                "duration": 900.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "2012",
+            "activity":
+            {
+                "point_id": "2012",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "2147",
+            "activity":
+            {
+                "point_id": "2147",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "2192",
+            "activity":
+            {
+                "point_id": "2192",
+                "duration": 3180.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "2307",
+            "activity":
+            {
+                "point_id": "2307",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "2557",
+            "activity":
+            {
+                "point_id": "2557",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "2593",
+            "activity":
+            {
+                "point_id": "2593",
+                "duration": 900.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "2977",
+            "activity":
+            {
+                "point_id": "2977",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "6562",
+            "activity":
+            {
+                "point_id": "6562",
+                "duration": 1800.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "6795",
+            "activity":
+            {
+                "point_id": "6795",
+                "duration": 900.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "6811",
+            "activity":
+            {
+                "point_id": "6811",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "6820",
+            "activity":
+            {
+                "point_id": "6820",
+                "duration": 2220.0,
+                "timewindows": []
+            },
+            "visits_number": 2,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 12
+        },
+        {
+            "id": "8560",
+            "activity":
+            {
+                "point_id": "8560",
+                "duration": 1980.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "8613",
+            "activity":
+            {
+                "point_id": "8613",
+                "duration": 900.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "8882",
+            "activity":
+            {
+                "point_id": "8882",
+                "duration": 1620.0,
+                "timewindows": []
+            },
+            "visits_number": 1,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 0
+        },
+        {
+            "id": "5990",
+            "activity":
+            {
+                "point_id": "5990",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        },
+        {
+            "id": "0500",
+            "activity":
+            {
+                "point_id": "0500",
+                "duration": 3960.0,
+                "timewindows": []
+            },
+            "visits_number": 4,
+            "quantities": [
+            {
+                "id": "qu1",
+                "unit_id": "nbr",
+                "value": 1.0
+            }],
+            "minimum_lapse": 6
+        }],
+        "shipments": [],
+        "vehicles": [
+        {
+            "id": "NORTE",
+            "start_point_id": "NORTE",
+            "end_point_id": "NORTE",
+            "router_mode": "car",
+            "cost_time_multiplier": 1.0,
+            "router_dimension": "time",
+            "cost_distance_multiplier": 1.0,
+            "timewindow":
+            {
+                "start": 31500,
+                "end": 54900
+            },
+            "capacities": [
+            {
+                "id": "ca1",
+                "unit_id": "nbr",
+                "limit": 15.0
+            }]
+        }],
+        "configuration":
+        {
+            "preprocessing":
+            {
+                "prefer_short_segment": true,
+                "use_periodic_heuristic": true
+            },
+            "resolution":
+            {
+                "solver_parameter": -1,
+                "duration": 2000000,
+                "initial_time_out": 31500,
+                "time_out_multiplier": 2,
+                "compute_initial_solution": true
+            },
+            "schedule":
+            {
+                "range_indices":
+                {
+                    "start": 1,
+                    "end": 24
+                }
+            },
+            "restitution":
+            {
+                "csv": true,
+                "intermediate_solutions": false
+            }
+        }
+    }
+}
