@@ -1481,7 +1481,7 @@ module Interpreters
                 setup_duration: service_in_vrp[:activity][:setup_duration],
                 duration: service_in_vrp[:activity][:duration],
                 timewindows: service_in_vrp[:tw],
-                quantities: service_in_vrp[:quantities].collect{ |qte| { unit: qte[:unit], value: qte[:value] } }
+                quantities: service_in_vrp[:quantities].to_a.collect{ |qte| { unit: qte[:unit], value: qte[:value] } }
               }
             }
             missions_list << "#{point[:id]}_#{point[:number_in_sequence]}/#{service_in_vrp[:visits_number]}"
