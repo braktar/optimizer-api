@@ -1226,7 +1226,7 @@ module Interpreters
                 @candidate_routes[vehicle][day][:current_route] = experiment[:current_route]
                 @candidate_routes[vehicle][day][:current_route].last[:number_in_sequence] += nb_added
               else
-                @uninserted["#{service[:id]}_#{service[:number_in_sequence] + nb_added}/#{services[service[:id]][:nb_visits]}"] = {
+                @uninserted["#{service[:id]}_#{service[:number_in_sequence] + nb_added}_#{services[service[:id]][:nb_visits]}"] = {
                   original_service: service[:id]
                 }
               end
@@ -1243,7 +1243,7 @@ module Interpreters
           if nb_added+1 < services[service[:id]][:nb_visits]
             first_missing = nb_added+2
             (first_missing..services[service[:id]][:nb_visits]).each{ |missing_s|
-              @uninserted["#{service[:id]}_#{missing_s}/#{services[service[:id]][:nb_visits]}"] = {
+              @uninserted["#{service[:id]}_#{missing_s}_#{services[service[:id]][:nb_visits]}"] = {
                 original_service: service[:id]
               }
             }
@@ -1470,8 +1470,8 @@ module Interpreters
           route[:services].each{ |point|
             service_in_vrp = vrp.services.find{ |s| s[:id] == point[:id] }
             computed_activities << {
-              service_id: point,
-              point_id: point[:point_id],
+              service_id: "#{point[:id]}_#{point[:number_in_sequence]}_#{service_in_vrp[:visits_number]}",
+              point_id: service_in_vrp[:activity][:point_id],
               begin_time: point[:end].to_i - service_in_vrp[:activity][:duration],
               departure_time: point[:end].to_i,
               detail: {
