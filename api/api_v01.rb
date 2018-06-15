@@ -573,7 +573,8 @@ Those could be of the following types:
   * **sequence** : force services to be served in a specific order, excluding others missions to be performed between
   * **meetup** : ensure that some missions are performed at the same time by multiple vehicles.
   * **maximum_duration_lapse** : Define a maximum in route duration between two activities.
-  * **minimum_day_lapse** : Define a minimum number of unworked days between two worked days.
+  * **minimum_day_lapse** : Define a minimum number of unworked days between two worked days. For instance, if you what one visit per week, you should use a minimum lapse of 7.
+  If the first service is assigned on a Monday then, with this minimum lapse, the solver will try to keep all these service\'s visits on Mondays.
   * **maximum_day_lapse** : Define a maximum number of unworked days between two worked days.
   * **force_end** : The linked activities are the only which can be set as last of a route. (Only one relation of this kind is considered)
   * **force_first** : The linked activities are the only which can be set as first of a route. (Only one relation of this kind is considered)
