@@ -1482,7 +1482,10 @@ module Interpreters
                 skills: services_data[point[:id]][:skills],
                 setup_duration: service_in_vrp[:activity][:setup_duration],
                 duration: service_in_vrp[:activity][:duration],
-                timewindows: service_in_vrp[:tw],
+                timewindows: service_in_vrp[:activity][:timewindows] && !service_in_vrp[:activity][:timewindows].empty? ? [{
+                  start: service_in_vrp[:activity][:timewindows][0][:start],
+                  end: service_in_vrp[:activity][:timewindows][0][:end],
+                }] : nil,
                 quantities: service_in_vrp[:quantities] ? service_in_vrp[:quantities].collect{ |qte| { unit: qte[:unit], value: qte[:value] } } : nil
               }
             }
@@ -1508,7 +1511,7 @@ module Interpreters
           }
 
           solution << {
-            vehicle_id: vehicle,
+            vehicle_id: route[:vehicle][:vehicle_id],
             activities: computed_activities,
             total_travel_time: @travel_time
           }
