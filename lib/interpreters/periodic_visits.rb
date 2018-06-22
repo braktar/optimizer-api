@@ -175,12 +175,14 @@ module Interpreters
         end
 
         if service.visits_number
-          if service.visits_number > 1
-            all_sub_services = (1..service.visits_number).collect{ |index| "#{service.id}_#{index}/#{service.visits_number}" }
-            vrp.relations << Models::Relation.new(:type => "same_service",
-              :linked_ids => all_sub_services
-            )
-          end
+          # only needed if sameService relation implemented in optimizer-ortools, which is not the case now
+          # conflict with current tests
+          # if service.visits_number > 1
+          #   all_sub_services = (1..service.visits_number).collect{ |index| "#{service.id}_#{index}/#{service.visits_number}" }
+          #   vrp.relations << Models::Relation.new(:type => "same_service",
+          #     :linked_ids => all_sub_services
+          #   )
+          # end
           if service.minimum_lapse && service.maximum_lapse && service.visits_number > 1
             (2..service.visits_number).each{ |index|
               current_lapse = (index -1) * service.minimum_lapse.to_i
