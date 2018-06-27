@@ -1521,11 +1521,23 @@ module Interpreters
       }
 
       @candidate_service_ids.each{ |point|
-        puts "#{point} uninserted"
+        # puts "#{point} uninserted"
         service_in_vrp = vrp.services.find{ |service| service[:id] == point }
         (1..service_in_vrp[:visits_number]).each{ |index|
           unassigned << {
-            service: "#{point}_#{index}_#{service_in_vrp[:visits_number]}",
+            service_id: "#{point}_#{index}_#{service_in_vrp[:visits_number]}",
+            point_id: service_in_vrp[:activity][:point_id],
+            detail: {
+              lat: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lat],
+              lon: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lon],
+              setup_duration: service_in_vrp[:activity][:setup_duration],
+              duration: service_in_vrp[:activity][:duration],
+              timewindows: service_in_vrp[:activity][:timewindows] && !service_in_vrp[:activity][:timewindows].empty? ? [{
+                start: service_in_vrp[:activity][:timewindows][0][:start],
+                end: service_in_vrp[:activity][:timewindows][0][:start],
+              }] : [],
+              quantities: service_in_vrp[:activity][:quantities]
+            },
             reason: "unaffected by heuristic"
           }
         }
@@ -1535,7 +1547,19 @@ module Interpreters
         s = @uninserted[service][:original_service]
         service_in_vrp = vrp.services.find{ |current_service| current_service[:id] == s }
         unassigned << {
-          service: service,
+          service_id: "#{point}_#{index}_#{service_in_vrp[:visits_number]}",
+          point_id: service_in_vrp[:activity][:point_id],
+          detail: {
+            lat: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lat],
+            lon: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lon],
+            setup_duration: service_in_vrp[:activity][:setup_duration],
+            duration: service_in_vrp[:activity][:duration],
+            timewindows: service_in_vrp[:activity][:timewindows] && !service_in_vrp[:activity][:timewindows].empty? ? [{
+              start: service_in_vrp[:activity][:timewindows][0][:start],
+              end: service_in_vrp[:activity][:timewindows][0][:start],
+            }] : [],
+            quantities: service_in_vrp[:activity][:quantities]
+          },
           reason: "unaffected by heuristic"
         }
       }
@@ -1544,7 +1568,7 @@ module Interpreters
       @planning.each{ |vehicle, all_days_routes|
         all_days_routes.each{ |day, route|
           if route[:services].empty?
-            puts "day #{day} empty"
+            # puts "day #{day} empty"
           else
             last_service = route[:services].last[:id]
             time_back_to_depot = route[:services].last[:end] + matrix(route[:vehicle], last_service, route[:vehicle][:end_point_id])
