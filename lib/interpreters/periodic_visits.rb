@@ -435,8 +435,8 @@ module Interpreters
                 end
                 new_vehicle.timewindow = Marshal::load(Marshal.dump(associated_timewindow))
                 new_vehicle.timewindow.id = ("#{associated_timewindow[:id]} #{(vehicle_day_index + @shift) % 7}" if associated_timewindow[:id] && !associated_timewindow[:id].nil?),
-                new_vehicle.timewindow.start = (((vehicle_day_index + @shift) % 7 )* 86400 + associated_timewindow[:start]),
-                new_vehicle.timewindow.end = (((vehicle_day_index + @shift) % 7 )* 86400 + associated_timewindow[:end])
+                new_vehicle.timewindow.start = associated_timewindow[:start]
+                new_vehicle.timewindow.end = associated_timewindow[:end]
                 new_vehicle.timewindow.day_index = nil
                 new_vehicle.global_day_index = vehicle_day_index
                 new_vehicle.sequence_timewindows = nil
