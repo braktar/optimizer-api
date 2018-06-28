@@ -1542,7 +1542,7 @@ module Interpreters
         s = @uninserted[service][:original_service]
         service_in_vrp = vrp.services.find{ |current_service| current_service[:id] == s }
         unassigned << {
-          service_id: "#{point}_#{index}_#{service_in_vrp[:visits_number]}",
+          service_id: service,
           point_id: service_in_vrp[:activity][:point_id],
           detail: {
             lat: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lat],
