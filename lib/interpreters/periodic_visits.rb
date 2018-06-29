@@ -903,6 +903,17 @@ module Interpreters
 
             if !@common_day[services[point_to_add[:id]][:point_id]]
               @common_day[services[point_to_add[:id]][:point_id]] = day%7
+              @candidate_service_ids.select{ |id| services[id][:point_id] == services[point_to_add[:id]][:point_id] }.each{ |id|
+                insertion_costs = compute_insertion_costs(vehicle, day, current_route, positions_in_order, services, route_data, temporary_excluded_services)
+                point = insertion_costs.find{ |service| service[:id] == id }
+                if point
+                  best_index = find_best_index(current_route, services, point[:id], 0, route_data)
+                  insert_point_in_route(current_route, best_index)
+                  @candidate_service_ids.delete(point[:id])
+                  services[point[:id]][:capacity].each{ |need, qty| route_data[:capacity_left][need] -= qty }
+                  positions_in_order.insert(point[:position], point[:position_in_order])
+                end
+              }
             end
 
             # if heuristic_period
