@@ -1252,7 +1252,7 @@ module Interpreters
               # not supposed to happen :
               elsif @vehicle_day_completed[vehicle][day]
                 # TODO : try to assign this specific service to another vehicle without provoquing any error in heuristic
-                @uninserted["#{service[:id]}_#{service[:number_in_sequence] + nb_added}_#{services[service[:id]][:nb_visits]}"] = {
+                @uninserted["#{service[:id]}_#{service[:number_in_sequence] + nb_added}/#{services[service[:id]][:nb_visits]}"] = {
                   original_service: service[:id]
                 }
 
@@ -1262,7 +1262,7 @@ module Interpreters
           if nb_added+1 < services[service[:id]][:nb_visits]
             first_missing = nb_added+2
             (first_missing..services[service[:id]][:nb_visits]).each{ |missing_s|
-              @uninserted["#{service[:id]}_#{missing_s}_#{services[service[:id]][:nb_visits]}"] = {
+              @uninserted["#{service[:id]}_#{missing_s}/#{services[service[:id]][:nb_visits]}"] = {
                 original_service: service[:id]
               }
             }
@@ -1493,7 +1493,7 @@ module Interpreters
           route[:services].each{ |point|
             service_in_vrp = vrp.services.find{ |s| s[:id] == point[:id] }
             computed_activities << {
-              service_id: "#{point[:id]}_#{point[:number_in_sequence]}_#{service_in_vrp[:visits_number]}",
+              service_id: "#{point[:id]}_#{point[:number_in_sequence]}/#{service_in_vrp[:visits_number]}",
               point_id: service_in_vrp[:activity][:point_id],
               begin_time: point[:end].to_i - service_in_vrp[:activity][:duration],
               departure_time: point[:end].to_i,
@@ -1544,7 +1544,7 @@ module Interpreters
         service_in_vrp = vrp.services.find{ |service| service[:id] == point }
         (1..service_in_vrp[:visits_number]).each{ |index|
           unassigned << {
-            service_id: "#{point}_#{index}_#{service_in_vrp[:visits_number]}",
+            service_id: "#{point}_#{index}/#{service_in_vrp[:visits_number]}",
             point_id: service_in_vrp[:activity][:point_id],
             detail: {
               lat: vrp.points.find{ |point| point[:id] == service_in_vrp[:activity][:point_id] }[:location][:lat],
