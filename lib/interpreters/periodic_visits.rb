@@ -1474,7 +1474,9 @@ module Interpreters
       solution = []
       unassigned = []
       @planning.each{ |vehicle, all_days_routes|
-        all_days_routes.each{ |day, route|
+        ordered_days = all_days_routes.keys.sort
+        ordered_days.each{ |day|
+          route = all_days_routes[day]
           missions_list = []
           computed_activities = []
           if route[:vehicle][:start_point_id]
