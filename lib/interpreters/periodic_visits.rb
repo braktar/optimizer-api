@@ -901,7 +901,7 @@ module Interpreters
             services[point_to_add[:id]][:capacity].each{ |need, qty| route_data[:capacity_left][need] -= qty }
             positions_in_order.insert(point_to_add[:position], point_to_add[:position_in_order])
 
-            if !@common_day[services[point_to_add[:id]][:point_id]]
+            if !@common_day[services[point_to_add[:id]][:point_id]] && @same_point_day
               @common_day[services[point_to_add[:id]][:point_id]] = day%7
               @candidate_service_ids.select{ |id| services[id][:point_id] == services[point_to_add[:id]][:point_id] }.each{ |id|
                 insertion_costs = compute_insertion_costs(vehicle, day, current_route, positions_in_order, services, route_data, temporary_excluded_services)
