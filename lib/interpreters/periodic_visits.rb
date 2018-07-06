@@ -1555,7 +1555,14 @@ module Interpreters
                 start: service_in_vrp[:activity][:timewindows][0][:start],
                 end: service_in_vrp[:activity][:timewindows][0][:start],
               }] : [],
-              quantities: service_in_vrp[:activity][:quantities]
+              quantities: service_in_vrp[:quantities].collect{ |qte|
+                {
+                  id: qte[:id],
+                  unit_id: qte[:unit_id],
+                  value: qte[:value],
+                  unit: qte[:unit]
+                }
+              }
             },
             reason: "unaffected by heuristic"
           }
@@ -1577,7 +1584,14 @@ module Interpreters
               start: service_in_vrp[:activity][:timewindows][0][:start],
               end: service_in_vrp[:activity][:timewindows][0][:start],
             }] : [],
-            quantities: service_in_vrp[:activity][:quantities]
+            quantities: service_in_vrp[:quantities].collect{ |qte|
+              {
+                id: qte[:id],
+                unit_id: qte[:unit_id],
+                value: qte[:value],
+                unit: qte[:unit]
+              }
+            }
           },
           reason: "unaffected by heuristic"
         }
