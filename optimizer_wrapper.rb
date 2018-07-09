@@ -152,8 +152,6 @@ module OptimizerWrapper
     else
       if config[:solve_synchronously] || (services_vrps.size == 1 && !vrp.preprocessing_cluster_threshold && config[:services][services_vrps[0][:service]].solve_synchronous?(vrp))
         complete_services_vrp = services_vrps.collect{ |service_vrp|
-          Interpreters::PeriodicVisits.initialize
-          service_vrp[:vrp] = Interpreters::PeriodicVisits.expand(service_vrp[:vrp])
           Interpreters::SplitClustering.split_clusters([service_vrp])
         }.flatten
         solve(complete_services_vrp, services_fleets)
@@ -212,6 +210,9 @@ module OptimizerWrapper
             total_distance: nil
           }
         else
+          Interpreters::PeriodicVisits.initialize
+          vrp = Interpreters::PeriodicVisits.expand(vrp)
+
           if !(vrp.vehicles.select{ |v| v.overall_duration }.size>0 || vrp.relations.select{ |r| r.type == 'vehicle_group_duration' }.size > 0)
             vrp_need_matrix = compute_vrp_need_matrix(vrp)
             vrp = compute_need_matrix(vrp, vrp_need_matrix)
@@ -933,8 +934,6 @@ module OptimizerWrapper
       services_vrps = Marshal.load(Base64.decode64(options['services_vrps']))
       services_fleets = Marshal.load(Base64.decode64(options['services_fleets']))
       complete_services_vrp = services_vrps.collect{ |service_vrp|
-        Interpreters::PeriodicVisits.initialize
-        service_vrp[:vrp] = Interpreters::PeriodicVisits.expand(service_vrp[:vrp])
         Interpreters::SplitClustering.split_clusters([service_vrp])
       }.flatten
       result = OptimizerWrapper.solve(complete_services_vrp, services_fleets, self.uuid) { |wrapper, avancement, total, message, cost, time, solution|
