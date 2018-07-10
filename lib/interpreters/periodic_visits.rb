@@ -984,7 +984,7 @@ module Interpreters
           start_time = (insertion_index == 0 ? [route_data[:tw_start], tw[:start] - route_time].max : [previous_service_end, tw[:start] - route_time].max)
           final_time = start_time + route_time + setup_duration + inserted_service_info[:duration]
 
-          if final_time <= tw[:end] # check days available too
+          if start_time <= tw[:end] # check days available too
             list << {
               start_time: start_time,
               final_time: final_time,
