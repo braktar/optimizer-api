@@ -840,11 +840,14 @@ module Interpreters
     end
 
     def self.insert_point_in_route(current_route, point_to_add)
+      first_at_this_point = current_route.find{ |step| step[:point_id] == point_to_add[:point] }
+
       current_route.insert(point_to_add[:position], {
         id: point_to_add[:id],
         point_id: point_to_add[:point],
         start: point_to_add[:start],
         end: point_to_add[:end],
+        considered_setup_duration: point_to_add[:considered_setup_duration],
         max_shift: point_to_add[:potential_shift],
         number_in_sequence: 1
       })
@@ -857,6 +860,19 @@ module Interpreters
           current_route[point][:start] += point_to_add[:shift]
           current_route[point][:end] += point_to_add[:shift]
           current_route[point][:max_shift] = current_route[point][:max_shift] ? current_route[point][:max_shift] - point_to_add[:shift] : nil
+        }
+      end
+
+      # assign setup to the first service at a point
+      if first_at_this_point && current_route.find_index(first_at_this_point) > point_to_add[:position] && first_at_this_point[:considered_setup_duration] > point_to_add[:considered_setup_duration]
+        setup_duration = first_at_this_point[:considered_setup_duration]
+        current_route[point_to_add[:position]][:considered_setup_duration] = setup_duration
+        current_route[point_to_add[:position]][:end] += setup_duration
+        first_at_this_point[:considered_setup_duration] = 0
+        first_at_this_point[:start] += setup_duration
+        (point_to_add[:position] + 1..(current_route.find_index(first_at_this_point) - 1)).each{ |position|
+          current_route[position][:start] += setup_duration
+          current_route[position][:end] += setup_duration
         }
       end
 
@@ -951,27 +967,30 @@ module Interpreters
     def self.find_timewindows(insertion_index, previous_service, previous_service_end, inserted_service, inserted_service_info, route_data)
       list = []
       route_time = (insertion_index == 0 ? matrix(route_data, route_data[:start_point_id], inserted_service) : matrix(route_data, previous_service, inserted_service))
+      setup_duration = route_data[:current_route].find{ |step| step[:point_id] == inserted_service_info[:point_id] }.nil? ? inserted_service_info[:setup_duration] : 0
 
       if inserted_service_info[:tw].nil? || inserted_service_info[:tw].empty?
         start = insertion_index == 0 ? route_data[:tw_start] : previous_service_end
-        final = start + route_time + inserted_service_info[:duration]
+        final = start + route_time + setup_duration + inserted_service_info[:duration]
         list << {
           start_time: start,
           final_time: final,
           end_tw: nil,
-          max_shift: nil
+          max_shift: nil,
+          setup_duration: setup_duration
         }
       else
         inserted_service_info[:tw].each{ |tw|
           start_time = (insertion_index == 0 ? [route_data[:tw_start], tw[:start] - route_time].max : [previous_service_end, tw[:start] - route_time].max)
-          final_time = start_time + route_time + inserted_service_info[:duration]
+          final_time = start_time + route_time + setup_duration + inserted_service_info[:duration]
 
           if final_time <= tw[:end] # check days available too
             list << {
               start_time: start_time,
               final_time: final_time,
               end_tw: tw[:end],
-              max_shift: tw[:end] - start_time
+              max_shift: tw[:end] - start_time,
+              setup_duration: setup_duration
             }
           end
         }
@@ -1006,6 +1025,7 @@ module Interpreters
             end: tw[:final_time],
             position: 0,
             position_in_order: -1,
+            considered_setup_duration: tw[:setup_duration],
             next_start_time: nil,
             next_final_time: nil,
             potential_shift: (tw[:max_shift] ? tw[:max_shift] - matrix(route_data, route_data[:start_point_id], service) : nil),
@@ -1043,6 +1063,7 @@ module Interpreters
                 end: final_time,
                 position: position,
                 position_in_order: -1, # to not consider this service, which does not respect order, to compute first_bigger_position
+                considered_setup_duration: current_tw[:setup_duration],
                 next_start_time: next_start,
                 next_final_time: next_end,
                 potential_shift: (current_tw[:max_shift] ? current_tw[:max_shift] - matrix(route_data, previous_service, service) : nil),
@@ -1143,6 +1164,7 @@ module Interpreters
                 end: final_time,
                 position: insertion_index,
                 position_in_order: s_position_in_order,
+                considered_setup_duration: potential_tw[0][:setup_duration],
                 next_start_time: next_start,
                 next_final_time: next_end,
                 potential_shift: max_shift,
@@ -1177,7 +1199,8 @@ module Interpreters
           point_id: services[first_service][:point_id],
           start: times[:start_time],
           end: times[:final_time],
-          max_shift: (times[:max_shift] ? times[:max_shift] - matrix(route_data, route_data[:start_point_id], first_service) : nil), # start point is now contained in route_data
+          considered_setup_duration: services[first_service][:setup_duration],
+          max_shift: (times[:max_shift] ? times[:max_shift] - matrix(route_data, route_data[:start_point_id], first_service) : nil),
           number_in_sequence: route_data[:current_route][0][:number_in_sequence]
         }
 
@@ -1195,6 +1218,7 @@ module Interpreters
               point_id: services[service][:point_id],
               start: start_time,
               end: final_time,
+              considered_setup_duration: services[service][:point_id] == services[previous_service][:point_id] ? 0 : services[service][:setup_duration],
               max_shift: (services[service][:tw].nil? || services[service][:tw].empty? ? nil : services[service][:tw][0][:end] - arrival_time),
               number_in_sequence: route_data[:current_route][position][:number_in_sequence]
             }
@@ -1259,6 +1283,7 @@ module Interpreters
                 experiment[:current_route] << Marshal::load(Marshal.dump(service))
                 readjust_times(experiment[:current_route], all_services)
                 recompute_times(vehicle, day, services, experiment)
+
                 if experiment[:current_route].last[:end] + matrix(@candidate_routes[vehicle][day], experiment[:current_route].last[:id], @candidate_routes[vehicle][day][:end_point_id] ) < @candidate_routes[vehicle][day][:tw_end]
                   inserted = true
                   @candidate_routes[vehicle][day][:current_route] = experiment[:current_route]
@@ -1367,7 +1392,8 @@ module Interpreters
         has_every_day_index = has_sequence_timewindows && !vrp.vehicles[0].sequence_timewindows.empty? && !((vrp.vehicles[0].sequence_timewindows.collect{ |tw| tw.day_index }.uniq & (0..6).to_a).size == 7)
         services_data[service.id] = {
           capacity: compute_capacities(service[:quantities], false),
-          duration: service[:activity][:duration] + service[:activity][:setup_duration],
+          setup_duration: service[:activity][:setup_duration],
+          duration: service[:activity][:duration],
           heuristic_period: (service[:visits_number] == 1 ? nil : (has_sequence_timewindows && !has_every_day_index ? (service[:minimum_lapse].to_f/7).to_i * 7 : (service[:minimum_lapse].nil? ? 1 : service[:minimum_lapse].floor ))),
           nb_visits: service[:visits_number],
           point_id: service[:activity][:point][:location][:id],
@@ -1455,7 +1481,6 @@ module Interpreters
           days_available.delete(current_day)
           @candidate_routes[current_vehicle].delete(current_day)
           adjust_candidate_routes(current_vehicle, current_day, services_data, new_services, @planning[current_vehicle][current_day][:services], days_available)
-
           while @candidate_routes[current_vehicle].any?{ |day, day_data| day_data[:current_route].size > 0 }
             current_day = @candidate_routes[current_vehicle].max_by{ |day, day_data| day_data[:current_route].size }.first
             # assign each service as soon as possible
@@ -1522,7 +1547,7 @@ module Interpreters
                 lat: vrp[:points].find{ |pt| pt[:location][:id] == point[:point_id] }[:location][:lat],
                 lon: vrp[:points].find{ |pt| pt[:location][:id] == point[:point_id] }[:location][:lon],
                 skills: services_data[point[:id]][:skills],
-                setup_duration: service_in_vrp[:activity][:setup_duration],
+                setup_duration: point[:considered_setup_duration],
                 duration: service_in_vrp[:activity][:duration],
                 timewindows: service_in_vrp[:activity][:timewindows] && !service_in_vrp[:activity][:timewindows].empty? ? [{
                   start: service_in_vrp[:activity][:timewindows][0][:start],
