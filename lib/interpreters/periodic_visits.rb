@@ -1358,9 +1358,17 @@ module Interpreters
       if quantities
         quantities.each{ |unit|
           if vehicle
-            capacities[unit[:unit][:id]] = unit[:limit].to_f
+            if capacities[unit[:unit][:id]]
+              capacities[unit[:unit][:id]] += unit[:limit].to_f
+            else
+              capacities[unit[:unit][:id]] = unit[:limit].to_f
+            end
           else
-            capacities[unit[:unit][:id]] = unit[:value].to_f
+            if capacities[unit[:unit][:id]]
+              capacities[unit[:unit][:id]] += unit[:value].to_f
+            else
+              capacities[unit[:unit][:id]] = unit[:value].to_f
+            end
           end
         }
       end
@@ -1400,6 +1408,7 @@ module Interpreters
           tw: service[:activity][:timewindows],
           unavailable_days: service[:unavailable_visit_day_indices]
         }
+
         @candidate_service_ids << service.id
 
         @indices[service[:id]] = vrp[:points].find{ |pt| pt[:id] == service[:activity][:point][:id] }[:matrix_index]
