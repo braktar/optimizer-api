@@ -108,10 +108,6 @@ module Interpreters
       services = vrp.services.select{ |service| cluster_services.include?(service.id) }.compact
       points_ids = services.map{ |s| s.activity.point.id }.uniq.compact
       sub_vrp.services = services
-      points = sub_vrp.services.collect.with_index{ |service, i|
-        service.activity.point.matrix_index = i
-        [service.activity.point.location.lat, service.activity.point.location.lon]
-      }
       sub_vrp.points = (vrp.points.select{ |p| points_ids.include? p.id } + vrp.vehicles.collect{ |vehicle| [vehicle.start_point, vehicle.end_point] }.flatten ).compact.uniq
       sub_vrp
     end
