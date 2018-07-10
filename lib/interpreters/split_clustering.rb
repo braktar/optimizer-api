@@ -43,7 +43,7 @@ module Interpreters
       all_vrps = services_vrps.collect{ |service_vrp|
         vrp = service_vrp[:vrp]
         if vrp.preprocessing_apply_hierarchical_split
-          split_hierarchical(service_vrp, vrp, 5) #give right nb of days : compute it in split_hierarchical ?
+          split_hierarchical(service_vrp, vrp) #give right nb of days : compute it in split_hierarchical ?
         elsif vrp.preprocessing_max_split_size && vrp.vehicles.size > 1 && vrp.shipments.size == 0 && service_vrp[:problem_size] > vrp.preprocessing_max_split_size &&
         vrp.services.size > vrp.preprocessing_max_split_size && !vrp.schedule_range_indices && !vrp.schedule_range_date
           points = vrp.services.collect.with_index{ |service, index|
@@ -129,54 +129,76 @@ module Interpreters
       sub_vrp
     end
 
-    def self.split_hierarchical(service_vrp, vrp, nb_days) # donner nombre jours, nb véhicules...
+    def self.count_metric(graph, parent, symbol)
+      value = parent.nil? ? 0 : graph[parent][:unit_metrics][symbol]
+      value + (parent.nil? ? 0 : (count_metric(graph, graph[parent][:left], symbol) + count_metric(graph, graph[parent][:right], symbol)))
+    end
+
+    def self.remove_from_upper(graph, node, symbol, value_to_remove)
+      if graph.key?(node)
+        graph[node][:unit_metrics][symbol] -= value_to_remove
+        remove_from_upper(graph, graph[node][:parent], symbol, value_to_remove)
+      end
+    end
+
+    def self.tree_leafs(graph, node)
+      if node.nil?
+        [nil]
+      elsif graph[node][:level] == 0
+        [node]
+      else
+        [tree_leafs(graph, graph[node][:left]), tree_leafs(graph, graph[node][:right])]
+      end
+    end
+
+    def self.split_hierarchical(service_vrp, vrp, cut_symbol = :duration)
       nb_clusters = vrp.vehicles.collect{ |vehicle| vehicle.sequence_timewindows && vehicle.sequence_timewindows.size || 7 }.inject(:+)
 
       # splits using hierarchical tree method
-      # nb jours dépenden nb jours dispo pour chaque véhicule. Il faut donner bon véhicule (avec ses tws notamment) à chaque ss-pb.
-
-      # total_qties = vrp.services.collect{ |service| service[:quantities].collect{ |qte| qte[:value] } }.flatten.sum
-      # weight_limit = (total_qties / nb_clusters).ceil
-
       if vrp.services.all?{ |service| service[:activity] }
-
-        cumulated_duration = vrp.services.collect{ |service| service[:activity][:duration] * service[:visits_number] }.sum
-
         graph = {}
         branches = {} # key will be the leaf of the branch
+        unit_symbols = vrp.units.collect{ |unit| unit.id.to_sym } << :duration
+
+        cumulated_metrics = {}
+        unit_symbols.map{ |unit| cumulated_metrics[unit] = 0 }
+        puts cumulated_metrics.inspect
 
         # one node per point
-        vrp.points.each_with_index{ |point, index|
-          # computed_qties = 0
-          point_duration = 0
+        right_index = 0
+        vrp.points.each{ |point|
+          unit_quantities = {}
+          unit_symbols.each{ |unit| unit_quantities[unit] = 0 }
           related_services = vrp.services.select{ |service| service[:activity][:point_id] == point[:id] }
           related_services.each{ |service|
-            point_duration += service[:activity][:duration]
-            # if service[:quantities]
-            #   service[:quantities].each{ |unit|
-            #     computed_qties += unit[:value]
-            #   }
-            # end
+            unit_quantities[:duration] += service[:activity][:duration] * service[:visits_number]
+            cumulated_metrics[:duration] += service[:activity][:duration] * service[:visits_number]
+
+            service.quantities.each{ |quantity|
+              unit_quantities[quantity.unit_id.to_sym] += quantity.value * service[:visits_number]
+              cumulated_metrics[quantity.unit_id.to_sym] += quantity.value * service[:visits_number]
+            }
           }
 
           next if related_services.empty?
-          # if computed_qties > 0 || vrp.services.any?{ |service| service[:activity][:point_id] == point[:id] } && vrp.services.none?{ |service| service[:activity][:point_id] == point[:id] && service[:quantities] && service[:quantities].none?{ |qte| qte[:value] > 0 } }
-          graph[index] = {
+          graph[right_index] = {
             points: [point[:id]],
-            # weight: computed_qties
-            duration: point_duration
+            level: 0,
+            parent: nil,
+            left: nil,
+            right: nil,
+            unit_metrics: unit_quantities
           }
-          branches[index] = {
-            nodes: [index]
+          branches[right_index] = {
+            nodes: [right_index]
           }
+          right_index += 1
         }
 
-        duration_limit = [cumulated_duration / nb_clusters, graph.collect{ |node, data| data[:duration] + 1 }.max].max
-
-        node_counter = graph.size + 1
+        metric_limit = cumulated_metrics[cut_symbol] / nb_clusters
+        node_counter = graph.size
         nodes_to_see = graph.keys
-
-        while nodes_to_see.size > nb_clusters
+        while nodes_to_see.size > 1
           # hierarchical tree logic
           merging_values = {}
 
@@ -184,18 +206,17 @@ module Interpreters
             node = nodes_to_see[n]
             (n + 1..nodes_to_see.size - 1).each{ |o|
               other_node = nodes_to_see[o]
-              avg = 0.0
+              cumulated_distance = 0.0
               nb_values = 0
               graph[node][:points].each{ |first|
                 first_point = vrp.points.find{ |point| point[:id] == first }
                 graph[other_node][:points].each{ |second|
-
                   second_point = vrp.points.find{ |point| point[:id] == second }
-                  avg += custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])
+                  cumulated_distance += custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])
                   nb_values += 1
                 }
               }
-              merging_values[avg/nb_values] = [node, other_node]
+              merging_values[cumulated_distance / nb_values] = [node, other_node]
             }
           }
 
@@ -203,19 +224,20 @@ module Interpreters
 
           # merge nodes
           first_node, second_node = merging_values[fusion_index]
+          graph[first_node][:parent] = node_counter
+          graph[second_node][:parent] = node_counter
+          merged_metrics = {}
+          unit_symbols.each{ |symbol|
+            merged_metrics[symbol] = graph[first_node][:unit_metrics][symbol] + graph[second_node][:unit_metrics][symbol]
+          }
           graph[node_counter] = {
             points: graph[first_node][:points] + graph[second_node][:points],
-            # weight: graph[first_node][:weight] + graph[second_node][:weight]
-            duration: graph[first_node][:duration] + graph[second_node][:duration]
+            level: [graph[first_node][:level], graph[second_node][:level]].max + 1,
+            parent: nil,
+            left: first_node,
+            right: second_node,
+            unit_metrics: merged_metrics
           }
-
-          branches.select{ |k, value| value[:nodes].include?(first_node) }.each{ |k, value|
-            value[:nodes] << node_counter
-          }
-          branches.select{ |k, value| value[:nodes].include?(second_node) }.each{ |k, value|
-            value[:nodes] << node_counter
-          }
-          # branches.find{ |k, branch| branch[:nodes].include?(second_node) }[1][:nodes] << node_counter
 
           nodes_to_see.delete(first_node)
           nodes_to_see.delete(second_node)
@@ -224,16 +246,22 @@ module Interpreters
         end
 
         nodes_kept = branches.collect{ |k, data| data[:nodes].last }.uniq!
-        # which nodes we keep ?
-        # nodes_kept = []
-        # branches.each{ |k, branch|
-        #   puts "#{branch}"
-        #   # nodes_kept << (branch[:nodes].select{ |node| graph[node][:computed_time] < duration_limit }.max || branch[:nodes].first)
-        #   nodes_kept << branch[:nodes].select{ |node| graph[node][:duration] < duration_limit }.max
-        #   puts "#{nodes_kept.last}"
-        # }
-        # nodes_kept.compact!
-        # nodes_kept.uniq!
+        # Tree cut process
+        clusters = Array.new()
+        max_level = graph.values.collect{ |value| value[:level] }.max
+        (0..max_level).each{ |current_level|
+          graph.select{ |k, v| v[:level] == current_level }.each{ |k, v|
+            next if v[:unit_metrics][cut_symbol] < metric_limit && current_level != max_level
+            clusters << tree_leafs(graph, k).flatten.compact
+            next if current_level == max_level
+            remove_from_upper(graph, graph[k][:parent], cut_symbol, v[:unit_metrics][cut_symbol])
+            if k == graph[v[:parent]][:left]
+              graph[v[:parent]][:left] = nil
+            else
+              graph[v[:parent]][:right] = nil
+            end
+          }
+        }
 
         # each node corresponds to a cluster
         vehicle_to_use = 0
@@ -259,11 +287,12 @@ module Interpreters
         points_seen = []
         file = File.new("service_with_tags.csv", "w+")
         file << "name,lat,lng,tags,duration \n"
-        nodes_kept.each_with_index{ |node, index|
+        clusters.each_with_index{ |cluster, index|
           services_list = []
-          graph[node][:points].each{ |point|
-            vrp.services.select{ |serv| serv[:activity][:point_id] == point }.each{ |service|
-              file << "#{service[:id]},#{service[:activity][:point][:location][:lat]},#{service[:activity][:point][:location][:lon]},#{index},#{service[:activity][:duration] * service[:visits_number] } \n"
+          cluster.each{ |node|
+            point_id = graph[node][:points].first
+            vrp.services.select{ |serv| serv[:activity][:point_id] == point_id }.each{ |service|
+              file << "#{service[:id]},#{service[:activity][:point][:location][:lat]},#{service[:activity][:point][:location][:lon]},#{index},#{service[:activity][:duration] * service[:visits_number]} \n"
               points_seen << service[:id]
               services_list << service[:id]
             }
