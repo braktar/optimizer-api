@@ -144,11 +144,24 @@ module Interpreters
     def self.tree_leafs(graph, node)
       if node.nil?
         [nil]
-      elsif graph[node][:level] == 0
+      elsif (graph[node][:level]).zero?
+         [node]
+       else
+         [tree_leafs(graph, graph[node][:left]), tree_leafs(graph, graph[node][:right])]
+       end
+    end
+
+
+    def self.tree_leafs_delete(graph, node)
+      returned = if node.nil?
+        []
+      elsif (graph[node][:level]).zero?
         [node]
       else
         [tree_leafs(graph, graph[node][:left]), tree_leafs(graph, graph[node][:right])]
       end
+      graph.delete(node)
+      returned
     end
 
     def self.split_hierarchical(service_vrp, vrp, cut_symbol = :duration)
@@ -157,20 +170,24 @@ module Interpreters
       # splits using hierarchical tree method
       if vrp.services.all?{ |service| service[:activity] }
         graph = {}
-        branches = {} # key will be the leaf of the branch
-        unit_symbols = vrp.units.collect{ |unit| unit.id.to_sym } << :duration
+        unit_symbols = vrp.units.collect{ |unit| unit.id.to_sym } << :duration << :visits
 
         cumulated_metrics = {}
+
         unit_symbols.map{ |unit| cumulated_metrics[unit] = 0 }
-        puts cumulated_metrics.inspect
+
+        max_cut_metrics = {}
+        unit_symbols.map{ |unit| max_cut_metrics[unit] = 0 }
 
         # one node per point
-        right_index = 0
+        current_index = 0
         vrp.points.each{ |point|
           unit_quantities = {}
           unit_symbols.each{ |unit| unit_quantities[unit] = 0 }
           related_services = vrp.services.select{ |service| service[:activity][:point_id] == point[:id] }
           related_services.each{ |service|
+            unit_quantities[:visits] += 1
+            cumulated_metrics[:visits] += 1
             unit_quantities[:duration] += service[:activity][:duration] * service[:visits_number]
             cumulated_metrics[:duration] += service[:activity][:duration] * service[:visits_number]
 
@@ -179,9 +196,12 @@ module Interpreters
               cumulated_metrics[quantity.unit_id.to_sym] += quantity.value * service[:visits_number]
             }
           }
+          unit_symbols.each{ |unit|
+            max_cut_metrics[unit] = [unit_quantities[unit], max_cut_metrics[unit]].max
+          }
 
           next if related_services.empty?
-          graph[right_index] = {
+          graph[current_index] = {
             points: [point[:id]],
             level: 0,
             parent: nil,
@@ -189,13 +209,11 @@ module Interpreters
             right: nil,
             unit_metrics: unit_quantities
           }
-          branches[right_index] = {
-            nodes: [right_index]
-          }
-          right_index += 1
+          current_index += 1
         }
 
         metric_limit = cumulated_metrics[cut_symbol] / nb_clusters
+        # raise OptimizerWrapper::DiscordantProblemError.new("Unfitting cluster split metric. Maximum value is greater than average") if max_cut_metrics[cut_symbol] > metric_limit
         node_counter = graph.size
         nodes_to_see = graph.keys
         while nodes_to_see.size > 1
@@ -207,16 +225,16 @@ module Interpreters
             (n + 1..nodes_to_see.size - 1).each{ |o|
               other_node = nodes_to_see[o]
               cumulated_distance = 0.0
-              nb_values = 0
               graph[node][:points].each{ |first|
                 first_point = vrp.points.find{ |point| point[:id] == first }
                 graph[other_node][:points].each{ |second|
                   second_point = vrp.points.find{ |point| point[:id] == second }
                   cumulated_distance += custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])
-                  nb_values += 1
+                  # cumulated_distance = [cumulated_distance, custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])].min
                 }
               }
-              merging_values[cumulated_distance / nb_values] = [node, other_node]
+              merging_values[cumulated_distance / (graph[node][:points].size * graph[other_node][:points].size)] = [node, other_node]
+              # merging_values[cumulated_distance] = [node, other_node]
             }
           }
 
@@ -245,10 +263,23 @@ module Interpreters
           node_counter += 1
         end
 
-        nodes_kept = branches.collect{ |k, data| data[:nodes].last }.uniq!
+        original_graph = Marshal.load(Marshal.dump(graph))
+
         # Tree cut process
-        clusters = Array.new()
+        clusters = []
         max_level = graph.values.collect{ |value| value[:level] }.max
+
+        # Top Down cut
+        # current_level = max_level
+        # while current_level >= 0
+        #   graph.select{ |k, v| v[:level] == current_level }.each{ |k, v|
+        #     next if v[:unit_metrics][cut_symbol] > 1.1 * metric_limit && current_level != 0
+        #     clusters << tree_leafs_delete(graph, k).flatten.compact
+        #   }
+        #   current_level -= 1
+        # end
+
+        # Bottom Up cut
         (0..max_level).each{ |current_level|
           graph.select{ |k, v| v[:level] == current_level }.each{ |k, v|
             next if v[:unit_metrics][cut_symbol] < metric_limit && current_level != max_level
@@ -290,7 +321,7 @@ module Interpreters
         clusters.each_with_index{ |cluster, index|
           services_list = []
           cluster.each{ |node|
-            point_id = graph[node][:points].first
+            point_id = original_graph[node][:points].first
             vrp.services.select{ |serv| serv[:activity][:point_id] == point_id }.each{ |service|
               file << "#{service[:id]},#{service[:activity][:point][:location][:lat]},#{service[:activity][:point][:location][:lon]},#{index},#{service[:activity][:duration] * service[:visits_number]} \n"
               points_seen << service[:id]
