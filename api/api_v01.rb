@@ -610,7 +610,8 @@ Preprocessing parameters will twist the problem in order to simplify or orient t
   "configuration": {
     "preprocessing": {
       "cluster_threshold": 5,
-      "prefer_short_segment": true
+      "prefer_short_segment": true,
+      "apply_hierarchical_split": true
     }
   }
 ```
@@ -652,6 +653,10 @@ Schedule parameters are only usefull in the case of Schedule Optimisation. Those
   }
 ```
 An alternative exist to those parameters in order to define it by date instead of indices __schedule_range_date__ and __schedule_unavailable_date__.
+
+More specific parameters are also available when dealing with Schedule Optimisation:
+* **use_periodic_heuristic** : uses our specific heuristic to find the first solution to provide to the solver.
+* **same_point_day** : all services located at the same geografical point will take place on the same day of the week.
 
 Restitution parameters allow to have some control on the API response
 ```json
