@@ -1677,7 +1677,7 @@ module Interpreters
             if !services_data[s[:id]][:tw].nil? && !services_data[s[:id]][:tw].empty?
               time_to_arrive = ( i == 0 ? matrix(route[:vehicle], route[:vehicle][:start_point_id], s[:id]) : matrix( route[:vehicle], route[:services][i - 1][:id], s[:id] ))
               if s[:start] + time_to_arrive < services_data[s[:id]][:tw][0][:start]
-                puts "#{day_key} noooo start : #{s}"
+                puts "#{day} noooo start : #{s}"
               end
               if s[:start] + time_to_arrive > services_data[s[:id]][:tw][0][:end]
                 puts "#{day} noooo start overpasses end #{s}"
