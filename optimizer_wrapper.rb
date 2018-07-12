@@ -211,11 +211,11 @@ module OptimizerWrapper
             vrp_need_matrix = compute_vrp_need_matrix(vrp)
             vrp = compute_need_matrix(vrp, vrp_need_matrix)
           end
-          vrp = Interpreters::PeriodicVisits.expand(vrp)
           @unfeasible_services = config[:services][service].check_distances(vrp, @unfeasible_services)
           vrp[:rejected_by_periodic].to_a.each{ |rejected_service, reason|
             @unfeasible_services[rejected_service] = reason
           }
+          vrp = Interpreters::PeriodicVisits.expand(vrp)
 
           File.write('test/fixtures/' + ENV['DUMP_VRP'].gsub(/[^a-z0-9\-]+/i, '_') + '.dump', Base64.encode64(Marshal::dump(vrp))) if ENV['DUMP_VRP']
 
