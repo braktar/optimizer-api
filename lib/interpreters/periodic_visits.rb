@@ -1188,7 +1188,7 @@ module Interpreters
       insertion_costs
     end
 
-    def self.recompute_times(vehicle, day, services, route_data)
+    def self.recompute_times(services, route_data)
       if !route_data[:current_route].empty?
         first_service = route_data[:current_route].first[:id]
         times = find_timewindows(0, nil, nil, first_service, services[first_service], route_data)[0]
@@ -1256,7 +1256,7 @@ module Interpreters
       experiment = Marshal::load(Marshal.dump(@candidate_routes[@candidate_vehicles[1]][day]))
       experiment[:current_route] << Marshal::load(Marshal.dump(service))
       readjust_times(experiment[:current_route], all_services)
-      recompute_times(vehicle, day, services, experiment)
+      recompute_times(services, experiment)
       if experiment[:current_route].last[:end] + matrix(@candidate_routes[@candidate_vehicles[1]][day], experiment[:current_route].last[:id], @candidate_routes[@candidate_vehicles[1]][day][:end_point_id] ) < @candidate_routes[@candidate_vehicles[1]][day][:tw_end]
         @candidate_routes[@candidate_vehicles[1]][day][:current_route] = experiment[:current_route]
         @candidate_routes[@candidate_vehicles[1]][day][:current_route].find{ |act| act[:id] == service[:id] }[:number_in_sequence] += nb_added
@@ -1282,7 +1282,7 @@ module Interpreters
                 experiment = Marshal::load(Marshal.dump(@candidate_routes[vehicle][day]))
                 experiment[:current_route] << Marshal::load(Marshal.dump(service))
                 readjust_times(experiment[:current_route], all_services)
-                recompute_times(vehicle, day, services, experiment)
+                recompute_times(services, experiment)
 
                 if experiment[:current_route].last[:end] + matrix(@candidate_routes[vehicle][day], experiment[:current_route].last[:id], @candidate_routes[vehicle][day][:end_point_id] ) < @candidate_routes[vehicle][day][:tw_end]
                   inserted = true
@@ -1481,7 +1481,7 @@ module Interpreters
           [@candidate_routes[current_vehicle][day][:current_route].size, @candidate_routes[current_vehicle][day][:tw_end] - @candidate_routes[current_vehicle][day][:tw_start]]
         }
         current_day = days_available[0]
-        recompute_times(current_vehicle, current_day, services_data, @candidate_routes[current_vehicle][current_day])
+        recompute_times(services_data, @candidate_routes[current_vehicle][current_day])
 
         while @candidate_service_ids.size > 0 && !current_day.nil?
           initial_services = @candidate_routes[current_vehicle][current_day][:current_route].collect{ |s| s[:id] }
@@ -1493,7 +1493,7 @@ module Interpreters
           while @candidate_routes[current_vehicle].any?{ |day, day_data| day_data[:current_route].size > 0 }
             current_day = @candidate_routes[current_vehicle].max_by{ |day, day_data| day_data[:current_route].size }.first
             # assign each service as soon as possible
-            recompute_times(current_vehicle, current_day, services_data, @candidate_routes[current_vehicle][current_day])
+            recompute_times(services_data, @candidate_routes[current_vehicle][current_day])
 
             initial_services = @candidate_routes[current_vehicle][current_day][:current_route].collect{ |s| s[:id] }
             fill_day_in_planning(current_vehicle, @candidate_routes[current_vehicle][current_day], services_data)
