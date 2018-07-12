@@ -1285,9 +1285,12 @@ module Interpreters
                 recompute_times(services, experiment)
 
                 if experiment[:current_route].last[:end] + matrix(@candidate_routes[vehicle][day], experiment[:current_route].last[:id], @candidate_routes[vehicle][day][:end_point_id] ) < @candidate_routes[vehicle][day][:tw_end]
-                  inserted = true
-                  @candidate_routes[vehicle][day][:current_route] = experiment[:current_route]
-                  @candidate_routes[vehicle][day][:current_route].find{ |act| act[:id] == service[:id] }[:number_in_sequence] += nb_added
+                  found_service = experiment[:current_route].find{ |act| act[:id] == service[:id] }
+                  if found_service
+                    inserted = true
+                    @candidate_routes[vehicle][day][:current_route] = experiment[:current_route]
+                    @candidate_routes[vehicle][day][:current_route].find{ |act| act[:id] == service[:id] }[:number_in_sequence] += nb_added
+                  end
                 elsif @candidate_vehicles.size > 2 && @allow_vehicle_change
                   inserted = try_on_different_vehicle(day, service, all_services)
                 end
