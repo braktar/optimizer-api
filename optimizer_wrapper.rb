@@ -140,11 +140,6 @@ module OptimizerWrapper
     }
     adjust_vehicles_duration(vrp)
 
-    if (vrp[:matrices] == nil || vrp[:matrices].empty?) && (vrp.vehicles.select{ |v| v.overall_duration }.size > 0 || vrp.relations.select{ |r| r.type == 'vehicle_group_duration' }.size > 0 || vrp.schedule_range_indices || vrp.schedule_range_date)
-      vrp_need_matrix = compute_vrp_need_matrix(vrp)
-      vrp = compute_need_matrix(vrp, vrp_need_matrix)
-    end
-
     if services_vrps.any?{ |sv| !sv[:service] }
       raise UnsupportedProblemError.new(inapplicable_services)
     elsif vrp.restitution_geometry && !vrp.points.all?{ |point| point[:location] }
@@ -211,12 +206,12 @@ module OptimizerWrapper
           }
         else
           Interpreters::PeriodicVisits.initialize
-          vrp = Interpreters::PeriodicVisits.expand(vrp)
 
           if !(vrp.vehicles.select{ |v| v.overall_duration }.size>0 || vrp.relations.select{ |r| r.type == 'vehicle_group_duration' }.size > 0)
             vrp_need_matrix = compute_vrp_need_matrix(vrp)
             vrp = compute_need_matrix(vrp, vrp_need_matrix)
           end
+          vrp = Interpreters::PeriodicVisits.expand(vrp)
           @unfeasible_services = config[:services][service].check_distances(vrp, @unfeasible_services)
           vrp[:rejected_by_periodic].to_a.each{ |rejected_service, reason|
             @unfeasible_services[rejected_service] = reason
