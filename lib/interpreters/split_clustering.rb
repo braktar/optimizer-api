@@ -19,6 +19,9 @@ require 'ai4r'
 include Ai4r::Data
 include Ai4r::Clusterers
 
+require './lib/interpreters/periodic_visits.rb'
+require './lib/clusterers/average_tree_linkage.rb'
+
 module Interpreters
   class SplitClustering
     def self.custom_distance(a, b)
@@ -151,7 +154,6 @@ module Interpreters
        end
     end
 
-
     def self.tree_leafs_delete(graph, node)
       returned = if node.nil?
         []
@@ -169,7 +171,6 @@ module Interpreters
 
       # splits using hierarchical tree method
       if vrp.services.all?{ |service| service[:activity] }
-        graph = {}
         unit_symbols = vrp.units.collect{ |unit| unit.id.to_sym } << :duration << :visits
 
         cumulated_metrics = {}
@@ -180,7 +181,8 @@ module Interpreters
         unit_symbols.map{ |unit| max_cut_metrics[unit] = 0 }
 
         # one node per point
-        current_index = 0
+        data_items = []
+
         vrp.points.each{ |point|
           unit_quantities = {}
           unit_symbols.each{ |unit| unit_quantities[unit] = 0 }
@@ -201,69 +203,35 @@ module Interpreters
           }
 
           next if related_services.empty?
-          graph[current_index] = {
-            points: [point[:id]],
-            level: 0,
-            parent: nil,
-            left: nil,
-            right: nil,
-            unit_metrics: unit_quantities
-          }
-          current_index += 1
+          data_items << [point.location.lat, point.location.lon, point.id, unit_quantities]
         }
+
+        custom_distance = lambda do |a, b|
+          r = 6378.137
+          deg2rad_lat_a = a[0] * Math::PI / 180
+          deg2rad_lat_b = b[0] * Math::PI / 180
+          deg2rad_lon_a = a[1] * Math::PI / 180
+          deg2rad_lon_b = b[1] * Math::PI / 180
+          lat_distance = deg2rad_lat_b - deg2rad_lat_a
+          lon_distance = deg2rad_lon_b - deg2rad_lon_a
+
+          intermediate = Math.sin(lat_distance / 2) * Math.sin(lat_distance / 2) + Math.cos(deg2rad_lat_a) * Math.cos(deg2rad_lat_b) *
+                         Math.sin(lon_distance / 2) * Math.sin(lon_distance / 2)
+
+          fly_distance = 1000 * r * 2 * Math.atan2(Math.sqrt(intermediate), Math.sqrt(1 - intermediate))
+          fly_distance
+        end
+        c = AverageTreeLinkage.new
+        c.distance_function = custom_distance
+        start_timer = Time.now
+        clusterer = c.build(DataSet.new(data_items: data_items), unit_symbols)
+        end_timer = Time.now
+        puts "Timer #{end_timer - start_timer}"
 
         metric_limit = cumulated_metrics[cut_symbol] / nb_clusters
         # raise OptimizerWrapper::DiscordantProblemError.new("Unfitting cluster split metric. Maximum value is greater than average") if max_cut_metrics[cut_symbol] > metric_limit
-        node_counter = graph.size
-        nodes_to_see = graph.keys
-        while nodes_to_see.size > 1
-          # hierarchical tree logic
-          merging_values = {}
 
-          (0..nodes_to_see.size - 2).each{ |n|
-            node = nodes_to_see[n]
-            (n + 1..nodes_to_see.size - 1).each{ |o|
-              other_node = nodes_to_see[o]
-              cumulated_distance = 0.0
-              graph[node][:points].each{ |first|
-                first_point = vrp.points.find{ |point| point[:id] == first }
-                graph[other_node][:points].each{ |second|
-                  second_point = vrp.points.find{ |point| point[:id] == second }
-                  cumulated_distance += custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])
-                  # cumulated_distance = [cumulated_distance, custom_distance([first_point[:location][:lat], first_point[:location][:lon]], [second_point[:location][:lat], second_point[:location][:lon]])].min
-                }
-              }
-              merging_values[cumulated_distance / (graph[node][:points].size * graph[other_node][:points].size)] = [node, other_node]
-              # merging_values[cumulated_distance] = [node, other_node]
-            }
-          }
-
-          fusion_index = merging_values.keys.min
-
-          # merge nodes
-          first_node, second_node = merging_values[fusion_index]
-          graph[first_node][:parent] = node_counter
-          graph[second_node][:parent] = node_counter
-          merged_metrics = {}
-          unit_symbols.each{ |symbol|
-            merged_metrics[symbol] = graph[first_node][:unit_metrics][symbol] + graph[second_node][:unit_metrics][symbol]
-          }
-          graph[node_counter] = {
-            points: graph[first_node][:points] + graph[second_node][:points],
-            level: [graph[first_node][:level], graph[second_node][:level]].max + 1,
-            parent: nil,
-            left: first_node,
-            right: second_node,
-            unit_metrics: merged_metrics
-          }
-
-          nodes_to_see.delete(first_node)
-          nodes_to_see.delete(second_node)
-          nodes_to_see << node_counter
-          node_counter += 1
-        end
-
-        original_graph = Marshal.load(Marshal.dump(graph))
+        graph = Marshal.load(Marshal.dump(clusterer.graph.compact))
 
         # Tree cut process
         clusters = []
@@ -318,10 +286,11 @@ module Interpreters
         points_seen = []
         file = File.new("service_with_tags.csv", "w+")
         file << "name,lat,lng,tags,duration \n"
+        clusters.delete([])
         clusters.each_with_index{ |cluster, index|
           services_list = []
           cluster.each{ |node|
-            point_id = original_graph[node][:points].first
+            point_id = clusterer.graph[node][:point]
             vrp.services.select{ |serv| serv[:activity][:point_id] == point_id }.each{ |service|
               file << "#{service[:id]},#{service[:activity][:point][:location][:lat]},#{service[:activity][:point][:location][:lon]},#{index},#{service[:activity][:duration] * service[:visits_number]} \n"
               points_seen << service[:id]
@@ -339,7 +308,6 @@ module Interpreters
           vehicle_to_use += 1
         }
         file.close
-
         sub_pbs
       else
         puts "split hierarchical not available when services have activities"
