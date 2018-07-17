@@ -18,6 +18,7 @@
 require 'ai4r'
 include Ai4r::Data
 include Ai4r::Clusterers
+require './lib/osm/overpass.rb'
 
 module Interpreters
   class ClusteringProcess
@@ -104,6 +105,8 @@ module Interpreters
       if service_vrp[:vrp].preprocessing_max_split_size && service_vrp[:vrp].vehicles.size > 1 && service_vrp[:vrp].shipments.empty? &&
          service_vrp[:problem_size] > service_vrp[:vrp].preprocessing_max_split_size &&
          service_vrp[:vrp].services.size > service_vrp[:vrp].preprocessing_max_split_size
+
+        polygons = generate_polygons(service_vrp[:vrp])
         # Define segragate dimensions
         unit_sets = service_vrp[:vrp].vehicles.collect{ |vehicle| vehicle.capacities.sort(&:unit_id).collect(&:unit_id) }.uniq
         intersections = unit_sets.inject(:&)
@@ -266,6 +269,43 @@ module Interpreters
         { service_id: vrp.services[index] } if label == :noise
       }.compact
       solution
+    end
+
+    def self.generate_polygons(vrp)
+      min_lat, min_lon, max_lat, max_lon = nil
+      if vrp.points.all?{ |point| point.location.lat && point.location.lon }
+        vrp.points.each{ |point|
+          min_lat = [min_lat, point.location.lat].compact.min
+          min_lon = [min_lon, point.location.lon].compact.min
+          max_lat = [max_lat, point.location.lat].compact.max
+          max_lon = [max_lon, point.location.lon].compact.max
+        }
+        bbox = {
+          n: max_lat,
+          s: min_lat,
+          w: min_lon,
+          e: max_lon
+        }
+        overpass = Interpreters::Overpass.new
+        overpass.process(bbox)
+      end
+    end
+
+    def self.route_details(route, vehicle)
+      previous = nil
+      details = nil
+      segments = route.collect{ |lat, lon|
+          current = [lat, lon]
+          segment = [previous.first, previous.last, lat, lon] if previous
+          previous = current
+          segment
+      }.compact
+      if !segments.empty?
+        details = OptimizerWrapper.router.compute_batch(OptimizerWrapper.config[:router][:url],
+          vehicle[:router_mode].to_sym, vehicle[:router_dimension], segments, false, vehicle.router_options)
+        raise RouterWrapperError unless details
+      end
+      details
     end
 
     def self.build_partial_vrp(vrp, cluster_services, cluster_vehicles = nil)

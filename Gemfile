@@ -23,10 +23,12 @@ gem 'nokogiri'
 gem 'resque'
 gem 'resque-status'
 gem 'redis', '<4' # Waiting Ruby 2.2 (dependency from resque)
+gem 'pg'
 
 gem 'ai4r'
 gem 'sim_annealing'
 
+gem 'overpass-api-ruby'
 gem 'rgeo'
 gem 'rgeo-geojson'
 gem 'polylines'
