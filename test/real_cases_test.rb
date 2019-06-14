@@ -389,6 +389,42 @@ class RealCasesTest < Minitest::Test
       # Check elapsed time
       assert result[:elapsed] < 10000, "Too long elapsed time: #{result[:elapsed]}"
     end
+
+    # North West of France - at the fastest with distance minimization
+    def test_instance_FR_G1G2
+      vrp = Models::Vrp.create(Hashie.symbolize_keys(JSON.parse(File.open('test/fixtures/' + self.name[5..-1] + '.json').to_a.join)['vrp']))
+      check_vrp = Marshal.load(Marshal.dump(vrp))
+      result = OptimizerWrapper.wrapper_vrp('ortools', {services: {vrp: [:ortools, :ortools]}}, vrp, nil)
+      assert result
+      #TODO: Add quality metrics
+    end
+
+    # North West of France - at the fastest with distance minimization
+    def test_instance_FR_HV11
+      vrp = Models::Vrp.create(Hashie.symbolize_keys(JSON.parse(File.open('test/fixtures/' + self.name[5..-1] + '.json').to_a.join)['vrp']))
+      check_vrp = Marshal.load(Marshal.dump(vrp))
+      result = OptimizerWrapper.wrapper_vrp('ortools', {services: {vrp: [:ortools, :ortools]}}, vrp, nil)
+      assert result
+      #TODO: Add quality metrics
+    end
+
+    # North West of France - at the fastest with distance minimization
+    def test_instance_FR_TV1
+      vrp = Models::Vrp.create(Hashie.symbolize_keys(JSON.parse(File.open('test/fixtures/' + self.name[5..-1] + '.json').to_a.join)['vrp']))
+      check_vrp = Marshal.load(Marshal.dump(vrp))
+      result = OptimizerWrapper.wrapper_vrp('ortools', {services: {vrp: [:ortools, :ortools]}}, vrp, nil)
+      assert result
+      #TODO: Add quality metrics
+    end
+
+    # North West of France - at the fastest with distance minimization
+    def test_instance_FR_TV11
+      vrp = Models::Vrp.create(Hashie.symbolize_keys(JSON.parse(File.open('test/fixtures/' + self.name[5..-1] + '.json').to_a.join)['vrp']))
+      check_vrp = Marshal.load(Marshal.dump(vrp))
+      result = OptimizerWrapper.wrapper_vrp('ortools', {services: {vrp: [:ortools, :ortools]}}, vrp, nil)
+      assert result
+      #TODO: Add quality metrics
+    end
   end
 
 end
