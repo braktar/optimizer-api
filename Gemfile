@@ -49,6 +49,8 @@ group :development, :test do
   # For creating dependency graphs
   gem 'rubrowser'
 
+  gem 'ruby-prof'
+
   ## Next gems to use the debuger of vscode directly
   ## but due to a bug in rubyide/vscode-ruby it doesn't
   ## work at the moment with rake::workers

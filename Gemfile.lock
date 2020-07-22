@@ -169,6 +169,7 @@ GEM
       parser (~> 2.3, >= 2.3.0)
       puma
       websocket
+    ruby-prof (0.18.0)
     ruby-progressbar (1.10.1)
     sim_annealing (0.0.2)
     simplecov (0.17.0)
@@ -259,6 +260,7 @@ DEPENDENCIES
   rubocop-minitest
   rubocop-performance
   rubrowser
+  ruby-prof
   sim_annealing
   simplecov
   solargraph
