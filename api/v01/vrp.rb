@@ -63,16 +63,14 @@ module Api
     end
 
     class Vrp < APIBase
-      content_type :json, 'application/json; charset=UTF-8'
-      content_type :xml, 'application/xml'
-      content_type :csv, 'text/csv;'
+      include Grape::Extensions::Hash::ParamBuilder
+
       parser :csv, CSVParser
-      default_format :json
 
       def self.vrp_request_timewindow(this)
         this.optional(:id, types: String)
-        this.optional(:start, types: [String, Float, Integer], desc: 'Beginning of the current timewindow in seconds', coerce_with: ->(value) { ScheduleType.new.type_cast(value, false) })
-        this.optional(:end, types: [String, Float, Integer], desc: 'End of the current timewindow in seconds', coerce_with: ->(value) { ScheduleType.new.type_cast(value, false) })
+        this.optional(:start, types: [String, Float, Integer], desc: 'Beginning of the current timewindow in seconds', coerce_with: ->(value) { ScheduleType.type_cast(value, false) })
+        this.optional(:end, types: [String, Float, Integer], desc: 'End of the current timewindow in seconds', coerce_with: ->(value) { ScheduleType.type_cast(value, false) })
         this.optional(:day_index, type: Integer, values: 0..6, desc: '(Scheduling only) Day index of the current timewindow within the periodic week, (monday = 0, ..., sunday = 6)')
         this.at_least_one_of :start, :end, :day_index
       end
@@ -112,7 +110,7 @@ module Api
 
       def self.vrp_request_rest(this)
         this.requires(:id, type: String, allow_blank: false)
-        this.requires(:duration, types: [String, Float, Integer], desc: 'Duration of the vehicle rest', coerce_with: ->(value) { ScheduleType.new.type_cast(value) })
+        this.requires(:duration, types: [String, Float, Integer], desc: 'Duration of the vehicle rest', coerce_with: ->(value) { ScheduleType.type_cast(value) })
         this.optional(:timewindows, type: Array, desc: 'Time slot while the rest may begin') do
           Vrp.vrp_request_timewindow(self)
         end
@@ -128,9 +126,9 @@ module Api
 
       def self.vrp_request_activity(this)
         this.optional(:position, types: Symbol, default: :neutral, values: [:neutral, :always_first, :always_middle, :always_last, :never_first, :never_middle, :never_last], desc: 'Provides an indication on when to do this service among whole route', coerce_with: ->(value) { value.to_sym })
-        this.optional(:duration, types: [String, Float, Integer], desc: 'Time while the current activity stands until it\'s over (in seconds)', coerce_with: ->(value) { ScheduleType.new.type_cast(value) })
+        this.optional(:duration, types: [String, Float, Integer], desc: 'Time while the current activity stands until it\'s over (in seconds)', coerce_with: ->(value) { ScheduleType.type_cast(value) })
         this.optional(:additional_value, type: Integer, desc: 'Additional value associated to the visit')
-        this.optional(:setup_duration, types: [String, Float, Integer], desc: 'Time at destination before the proper activity is effectively performed', coerce_with: ->(value) { ScheduleType.new.type_cast(value) })
+        this.optional(:setup_duration, types: [String, Float, Integer], desc: 'Time at destination before the proper activity is effectively performed', coerce_with: ->(value) { ScheduleType.type_cast(value) })
         this.optional(:late_multiplier, type: Float, desc: '(ORtools only) Overrides the late_multiplier defined at the vehicle level')
         this.optional(:timewindow_start_day_shift_number, documentation: { hidden: true }, type: Integer, desc: '[ DEPRECATED ]')
         this.requires(:point_id, type: String, allow_blank: false, desc: 'Reference to the associated point')
@@ -203,8 +201,8 @@ module Api
         this.optional :snap, type: Float, desc: 'Snap waypoint to junction close by snap distance'
         this.optional :strict_restriction, type: Boolean, desc: 'Strict compliance with truck limitations'
 
-        this.optional(:duration, types: [String, Float, Integer], desc: 'Maximum tour duration', coerce_with: ->(value) { ScheduleType.new.type_cast(value, false, false) })
-        this.optional(:overall_duration, types: [String, Float, Integer], documentation: { hidden: true }, desc: '(Scheduling only) If schedule covers several days, maximum work duration over whole period. Not available with periodic heuristic.', coerce_with: ->(value) { ScheduleType.new.type_cast(value, false, false) })
+        this.optional(:duration, types: [String, Float, Integer], desc: 'Maximum tour duration', coerce_with: ->(value) { ScheduleType.type_cast(value, false, false) })
+        this.optional(:overall_duration, types: [String, Float, Integer], documentation: { hidden: true }, desc: '(Scheduling only) If schedule covers several days, maximum work duration over whole period. Not available with periodic heuristic.', coerce_with: ->(value) { ScheduleType.type_cast(value, false, false) })
         this.optional(:distance, types: Integer, desc: 'Maximum tour distance. Not available with periodic heuristic.')
         this.optional(:maximum_ride_time, type: Integer, desc: 'Maximum ride duration between two route activities')
         this.optional(:maximum_ride_distance, type: Integer, desc: 'Maximum ride distance between two route activities')
