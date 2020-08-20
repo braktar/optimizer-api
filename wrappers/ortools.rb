@@ -492,14 +492,14 @@ module Wrappers
       build_detail(nil, rest, nil, day_index, job_load, nil, nil)
     end
 
-    def build_costs(costs)
-      cost = Models::Costs.new(
-        fixed: costs&.fixed || 0,
-        time: costs && (costs.time + costs.time_fake + costs.time_without_wait) || 0,
-        distance: costs && (costs.distance + costs.distance_fake) || 0,
-        value: costs&.value || 0,
-        lateness: costs&.lateness || 0,
-        overload: costs&.overload || 0
+    def build_cost_details(cost_details)
+      cost = Models::CostDetails.new(
+        fixed: cost_details&.fixed || 0,
+        time: cost_details && (cost_details.time + cost_details.time_fake + cost_details.time_without_wait) || 0,
+        distance: cost_details && (cost_details.distance + cost_details.distance_fake) || 0,
+        value: cost_details&.value || 0,
+        lateness: cost_details&.lateness || 0,
+        overload: cost_details&.overload || 0
       )
       cost.total = cost.attributes.values.sum
       cost
@@ -532,7 +532,7 @@ module Wrappers
       {
         solvers: ['ortools'],
         cost: 0,
-        costs: Models::Costs.new({}),
+        cost_details: Models::CostDetails.new({}),
         iterations: 0,
         elapsed: 0, # ms
         routes: [],
@@ -589,7 +589,7 @@ module Wrappers
       # Currently, we continue to multiply by 1000 so we divide by 1000.0
       # but this needs to be updated by unit.precision_coef
       content.routes.each{ |route|
-        route.costs.overload = (route.costs.overload || 0) / 1000.0 if route.costs
+        route.cost_details.overload = (route.cost_details.overload || 0) / 1000.0 if route.cost_details
         route.activities.each{ |activity|
           activity.quantities.map!{ |val| val / 1000.0 }
         }
@@ -603,7 +603,7 @@ module Wrappers
 
       collected_indices = []
       vehicle_rest_ids = Hash.new([])
-      solution_cost = Models::Costs.new({})
+      solution_cost = Models::CostDetails.new({})
       {
         cost: content.cost || 0,
         solvers: ['ortools'],
@@ -612,7 +612,7 @@ module Wrappers
         routes: content.routes.each_with_index.collect{ |route, index|
           vehicle = vrp.vehicles[index]
           vehicle_matrix = vrp.matrices.find{ |matrix| matrix.id == vehicle.matrix_id }
-          route_costs = build_costs(route.costs)
+          route_costs = build_cost_details(route.cost_details)
           costs_array << route_costs
 
           previous_matrix_index = nil
@@ -627,7 +627,7 @@ module Wrappers
           earliest_start = route_start
           {
             vehicle_id: vehicle.id,
-            costs: route_costs,
+            cost_details: route_costs,
             activities: route.activities.collect.with_index{ |activity, activity_index|
               current_activity = nil
               current_index = activity.index || 0
@@ -772,7 +772,7 @@ module Wrappers
             }
           }
         }
-      }.merge(costs: costs_array.sum)
+      }.merge(cost_details: costs_array.sum)
     end
 
     def run_ortools(problem, vrp, services, points, matrix_indices, thread_proc = nil, &block)
