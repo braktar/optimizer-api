@@ -11,9 +11,9 @@ gem 'thin'
 
 gem 'grape', '>1.4.0'
 gem 'grape-entity'
+gem 'grape_logging'
 gem 'grape-swagger'
 gem 'grape-swagger-entity'
-gem 'grape_logging'
 gem 'hashie'
 
 gem 'active_hash', github: 'Mapotempo/active_hash'
@@ -29,8 +29,8 @@ gem 'resque-status', '>0.4'
 gem 'rest-client'
 
 gem 'ai4r'
-gem 'sim_annealing'
 gem 'balanced_vrp_clustering', github: 'Mapotempo/balanced_vrp_clustering', branch: 'dev'
+gem 'sim_annealing'
 
 gem 'polylines'
 gem 'rgeo'
