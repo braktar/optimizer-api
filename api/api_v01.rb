@@ -34,7 +34,7 @@ module Api
 
     mount V01::Api
 
-    documentation_class = add_swagger_documentation(
+    add_swagger_documentation(
       hide_documentation_path: true,
       security_definitions: {
         api_key_query_param: {
