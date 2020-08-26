@@ -38,7 +38,6 @@ module Api
 
           object = CharlockHolmes::Converter.convert(object, detection[:encoding], 'UTF-8')
         end
-
         line = object.lines.first
         split_comma, split_semicolon, split_tab = line.split(','), line.split(';'), line.split("\t")
         _split, separator = [[split_comma, ',', split_comma.size], [split_semicolon, ';', split_semicolon.size], [split_tab, "\t", split_tab.size]].max_by{ |a| a[2] }
@@ -59,7 +58,7 @@ module Api
             r.deep_merge!(JSON.parse(json))
           end
 
-          r
+          r.with_indifferent_access
         }
       end
     end

@@ -15,11 +15,13 @@
 # along with Mapotempo. If not, see:
 # <http://www.gnu.org/licenses/agpl.html>
 #
+require './api/v01/vrp'
+
 module VrpInput
   extend Grape::API::Helpers
 
   params :input do
-    optional(:vrp, type: Hash, documentation: { param_type: 'body' }, coerce_with: ->(c) { c.has_key?('filename') ? JSON.parse(c.tempfile.read) : c }) do
+    optional(:vrp, type: Hash, documentation: { param_type: 'body' }, coerce_with: ->(c) { c.has_key?('filename') ? JSON.parse(c[:tempfile].read) : c }) do
       use :request_object
     end
     use :request_files
@@ -67,61 +69,57 @@ module VrpInput
                            # We expect here to keep the definition of the high level model in a single place
     optional :points, type: Array,
                       documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Particular place in the map' },
-                      coerce_with: ->(c) { parse_csv(c) } do
+                      coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_point
     end
 
     optional :units, type: Array,
                      documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! The name of a Capacity/Quantity' },
-                     coerce_with: ->(c) { parse_csv(c) } do
+                     coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_unit
     end
 
     optional :timewindows, type: Array,
                            documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Time slot while the activity may be performed' },
-                           coerce_with: ->(c) { parse_csv(c) } do
+                           coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_timewindow
     end
 
     optional :capacities, type: Array,
                           documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Define the limit of entities the vehicle could carry' },
-                          coerce_with: ->(c) { parse_csv(c) } do
+                          coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_capacity
     end
 
     optional :quantities, type: Array,
                           documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Define the entities which are taken or dropped' },
-                          coerce_with: ->(c) { parse_csv(c) } do
+                          coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_quantity
     end
 
     optional :services, type: Array,
                         documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Independent activity, which does not require a context' },
-                        coerce_with: ->(c) { parse_csv(c) } do
+                        coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_service
     end
 
-    optional(:shipments, type: Array,
+    optional :shipments, type: Array,
                          documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Link directly one activity of collection to another of drop off' },
-                         coerce_with: ->(c) { parse_csv(c) }) do
+                         coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_shipment
     end
 
-    optional(:vehicles, type: Array,
+    optional :vehicles, type: Array,
                         documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Usually represent a work day of a particular driver/vehicle' },
-                        coerce_with: ->(c) { parse_csv(c) }) do
+                        coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_vehicle
     end
 
     optional(:configuration, type: Hash,
                              documentation: { hidden: true, desc: 'Describe the limitations of the solve in term of computation' },
-                             coerce_with: ->(c) { c.has_key?('filename') ? JSON.parse(c.tempfile.read) : c }) do
+                             coerce_with: ->(path) { JSON.parse(path[:tempfile].read, symbolize_names: true) }) do
       use :vrp_request_configuration
     end
-  end
-
-  def parse_csv(path)
-    CSVParser.call(File.open(path.tempfile, 'r:bom|utf-8').read, nil)
   end
 end
 
@@ -244,8 +242,8 @@ module VrpMisc
                            It could be the following types: same_route, sequence, order, minimum_day_lapse, maximum_day_lapse,
                            shipment, meetup, minimum_duration_lapse, maximum_duration_lapse')
     optional(:lapse, type: Integer, desc: 'Only used for relations implying a duration constraint : minimum/maximum day lapse, vehicle group durations...')
-    optional(:linked_ids, type: Array[String], allow_blank: false, desc: 'List of activities involved in the relation')
-    optional(:linked_vehicle_ids, type: Array[String], allow_blank: false, desc: 'List of vehicles involved in the relation')
+    optional(:linked_ids, type: Array[String], allow_blank: false, desc: 'List of activities involved in the relation', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
+    optional(:linked_vehicle_ids, type: Array[String], allow_blank: false, desc: 'List of vehicles involved in the relation', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
     optional(:periodicity, type: Integer, documentation: { hidden: true }, desc: 'In the case of planning optimization, number of weeks/months to consider at the same time/in each relation : vehicle group duration on weeks/months')
     at_least_one_of :linked_ids, :linked_vehicle_ids
   end
@@ -253,9 +251,9 @@ module VrpMisc
   params :vrp_request_route do
     optional(:vehicle_id, type: String, desc: 'Vehicle linked to the current described route')
     optional(:indice, type: Integer, documentation: { hidden: true }, desc: '[ DEPRECATED : use day_index instead ]')
-    optional(:day_index, type: Integer, desc: 'Index of the route. Must be provided if first_solution_strategy is \'periodic\'.')
+    optional(:index, type: Integer, desc: 'Index of the route. Must be provided if first_solution_strategy is \'periodic\'.')
     optional(:date, type: Date, desc: 'Date of the route. Must be provided if first_solution_strategy is \'periodic\'.')
-    requires(:mission_ids, type: Array[String], desc: 'Initial state or partial state of the current vehicle route')
+    requires(:mission_ids, type: Array[String], desc: 'Initial state or partial state of the current vehicle route', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
     mutually_exclusive :indice, :index, :day
   end
 
@@ -266,7 +264,7 @@ module VrpMisc
     optional(:router_mode, type: String, desc: '`car`, `truck`, `bicycle`, etc... See the Router Wrapper API doc')
     optional(:router_dimension, type: String, values: ['time', 'distance'], desc: 'time or dimension, choose between a matrix based on minimal route duration or on minimal route distance')
     optional(:speed_multiplier, type: Float, default: 1.0, desc: 'multiply the current modality speed, default : 1.0')
-    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this subtour')
+    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this subtour', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
     optional(:duration, type: Integer, desc: 'Maximum subtour duration')
     optional(:transmodal_stops, type: Array, desc: 'Point where the vehicles can park and start the subtours') do
       use :vrp_request_point
@@ -312,9 +310,8 @@ module VrpMissions
 
     optional(:minimum_lapse, type: Float, desc: '(Scheduling only) Minimum day lapse between two visits')
     optional(:maximum_lapse, type: Float, desc: '(Scheduling only) Maximum day lapse between two visits')
-
-    optional(:sticky_vehicle_ids, type: Array[String], desc: 'Defined to which vehicle the service is assigned')
-    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this service. Not available with periodic heuristic.')
+    optional(:sticky_vehicle_ids, type: Array[String], desc: 'Defined to which vehicle the service is assigned', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
+    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this service. Not available with periodic heuristic.', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
 
     optional(:type, type: Symbol, desc: '`service`, `pickup` or `delivery`. Only service type is available with periodic heuristic.')
     optional(:activity, type: Hash, desc: 'Details of the activity performed to accomplish the current service') do
@@ -348,8 +345,8 @@ module VrpMissions
     optional(:maximum_lapse, type: Float, desc: 'Maximum day lapse between two visits')
 
     optional(:maximum_inroute_duration, type: Integer, desc: 'Maximum in route duration of this particular shipment (Must be feasible !)')
-    optional(:sticky_vehicle_ids, type: Array[String], desc: 'Defined to which vehicle the shipment is assigned')
-    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this shipment')
+    optional(:sticky_vehicle_ids, type: Array[String], desc: 'Defined to which vehicle the shipment is assigned', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
+    optional(:skills, type: Array[String], desc: 'Particular abilities required by a vehicle to perform this shipment', coerce_with: ->(val) { val.is_a?(String) ? val.split(/,/) : val })
     requires(:pickup, type: Hash, allow_blank: false, desc: 'Activity of collection') do
       use :vrp_request_activity
     end
@@ -449,7 +446,8 @@ module VrpVehicles
     optional(:distance, types: Integer, desc: 'Maximum tour distance. Not available with periodic heuristic.')
     optional(:maximum_ride_time, type: Integer, desc: 'Maximum ride duration between two route activities')
     optional(:maximum_ride_distance, type: Integer, desc: 'Maximum ride distance between two route activities')
-    optional(:skills, type: Array[Array[String]], desc: 'Particular abilities which could be handle by the vehicle. This parameter is a set of alternative skills, and must be defined as an Array[Array[String]]. Not available with periodic heuristic.')
+    optional :skills, type: Array[Array[String]], desc: 'Particular abilities which could be handle by the vehicle. This parameter is a set of alternative skills, and must be defined as an Array[Array[String]]. Not available with periodic heuristic.',
+                      coerce_with: ->(val) { val.is_a?(String) ? [val.split(/,/).map(&:strip)] : val } # TODO : Create custom coerce to consider multiple alternatives
 
     optional(:unavailable_work_day_indices, type: Array[Integer], desc: '(Scheduling only) Express the exceptionnals indices of unavailabilty')
     optional(:unavailable_work_date, type: Array, desc: '(Scheduling only) Express the exceptionnals days of unavailability')
