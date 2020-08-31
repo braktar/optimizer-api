@@ -29,8 +29,8 @@ module Wrappers
     end
 
     def inapplicable_solve?(vrp)
-      solver_constraints.select{ |constraint|
-        !self.send(constraint, vrp)
+      solver_constraints.reject{ |constraint|
+        self.send(constraint, vrp)
       }
     end
 
@@ -456,8 +456,50 @@ module Wrappers
       }
     end
 
+    def assert_homogeneous_router_definitions(vrp)
+      vrp.vehicles.map{ |vehicle|
+        [vehicle.router_mode, vehicle.dimensions, vehicle.router_options]
+      }.uniq.size == 1
+    end
+
+    def assert_homogeneous_costs(vrp)
+      cost_profiles = Hash.new{ 0 }
+      vrp.vehicles.each{ |vehicle|
+        cost_profiles["#{vehicle.cost_time_multiplier}_#{vehicle.cost_distance_multiplier}_#{vehicle.cost_value_multiplier}"] += 1
+      }
+      cost_profiles.size == 1
+    end
+
+    def assert_only_time_dimension(vrp)
+      vrp.vehicles.all? { |vehicle|
+        vehicle.cost_time_multiplier.positive? && vehicle.cost_distance_multiplier.zero? && vehicle.cost_value_multiplier.zero? && vehicle.distance.nil?
+      }
+    end
+
+    def assert_only_distance_dimension(vrp)
+      vrp.vehicles.all?{ |vehicle|
+        vehicle.cost_time_multiplier.zero? && vehicle.cost_distance_multiplier.positive? && vehicle.cost_value_multiplier.zero? &&
+          vehicle.duration.nil? && vrp.timewindow.end.nil?
+      } && vrp.services.all?{ |service| service.activity.timewindows.empty? }
+    end
+
+    def assert_only_value_dimension(vrp)
+      vrp.vehicles.all?{ |vehicle|
+        vehicle.cost_time_multiplier.zero? && vehicle.cost_distance_multiplier.zero? && vehicle.cost_value_multiplier.positive? &&
+          vehicle.duration.nil? && vehicle.distance.nil? && vrp.timewindow.end.nil?
+      }
+    end
+
+    def assert_single_dimension(vrp)
+      assert_only_time_dimension(vrp) ^ assert_only_distance_dimension(vrp) ^ assert_only_value_dimension(vrp)
+    end
+
     def assert_no_route_if_schedule_without_periodic_heuristic(vrp)
       vrp.routes.empty? || !vrp.schedule_range_indices || vrp.preprocessing_first_solution_strategy.to_a.include?('periodic')
+    end
+
+    def assert_small_minimum_duration
+      vrp.resolution_minimum_duration / vrp.vehicles.size < 5000
     end
 
     def solve_synchronous?(_vrp)
