@@ -9,7 +9,7 @@ gem 'rack-cors'
 gem 'rakeup'
 gem 'thin'
 
-gem 'grape', '>1.4.0'
+gem 'grape', '>1.4.0', github: 'ruby-grape/grape', branch: 'master'
 gem 'grape-entity'
 gem 'grape_logging'
 gem 'grape-swagger'
