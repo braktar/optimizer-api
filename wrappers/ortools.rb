@@ -545,13 +545,11 @@ module Wrappers
           }
         }) + (vrp.shipments.collect{ |shipment|
           [{
-            shipment_id: shipment.id,
-            type: 'pickup',
+            pickup_shipment_id: shipment.id,
             point_id: shipment.pickup.point_id,
             detail: build_detail(shipment, shipment.pickup, shipment.pickup.point, nil, nil, nil)
           }] << {
-            shipment_id: shipment.id,
-            type: 'delivery',
+            delivery_shipment_id: shipment.id,
             point_id: shipment.delivery.point_id,
             detail: build_detail(shipment, shipment.delivery, shipment.delivery.point, nil, nil, nil, true)
           }
