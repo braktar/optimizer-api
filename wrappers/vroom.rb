@@ -50,6 +50,8 @@ module Wrappers
         :assert_homogeneous_costs,
         :assert_single_dimension,
         :assert_small_minimum_duration,
+        :assert_no_cost_fixed,
+        :assert_no_setup_duration
       ]
     end
 

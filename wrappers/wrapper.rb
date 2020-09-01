@@ -502,6 +502,18 @@ module Wrappers
       vrp.resolution_minimum_duration.nil? || vrp.resolution_minimum_duration / vrp.vehicles.size < 5000
     end
 
+    def assert_no_cost_fixed(vrp)
+      vrp.vehicles.all?{ |vehicle| vehicle.cost_fixed.nil? || vehicle.cost_fixed.zero? }
+    end
+
+    def assert_no_setup_duration(vrp)
+      vrp.services.all?{ |service| service.activity.setup_duration.nil? || service.activity.setup_duration.zero? } &&
+        vrp.shipments.all?{ |shipment|
+          (shipment.pickup.setup_duration.nil? || shipment.pickup.setup_duration.zero?) &&
+            (shipment.delivery.setup_duration.nil? || shipment.delivery.setup_duration.zero?)
+        }
+    end
+
     def solve_synchronous?(_vrp)
       false
     end
