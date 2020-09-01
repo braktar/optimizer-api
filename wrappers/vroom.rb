@@ -255,19 +255,19 @@ module Wrappers
           start_index: vehicle.start_point_id ? points[vehicle.start_point_id].matrix_index : nil,
           end_index: vehicle.end_point_id ? points[vehicle.end_point_id].matrix_index : nil,
           capacity: vrp_units.map{ |unit| vehicle.capacities.find{ |capacity| capacity.unit.id == unit.id }&.limit&.to_i || 0 },
-          time_window: [vehicle.timewindow&.start || 0, vehicle.timewindow&.end || 2**52],
+          time_window: [vehicle.timewindow&.start || 0, vehicle.timewindow&.end || 2**30],
           skills: ([vrp_skills.find_index{ |sk| sk == vehicle.id }] + (vehicle.skills&.first&.map{ |skill| vrp_skills.find_index{ |sk| sk == skill } } || [])).compact,
           breaks: vehicle.rests.map{ |rest|
             rest_index = @rest_hash["#{vehicle.id}_#{rest.id}"][:index]
             {
               id: rest_index,
               service: rest.duration,
-              time_windows: rest.timewindows.map{ |tw| [tw&.start || 0, tw&.end || 2**52] }
+              time_windows: rest.timewindows.map{ |tw| [tw&.start || 0, tw&.end || 2**30] }
             }
           }
         }.delete_if{ |k, v|
           v.nil? || v.is_a?(Array) && v.empty? ||
-            k == :time_window && v.first.zero? && v.last == 2**52
+            k == :time_window && v.first.zero? && v.last == 2**30
         }
       }
       problem[:jobs] = vrp.services.map.with_index{ |service, index|
@@ -280,7 +280,7 @@ module Wrappers
           skills: service.skills.flat_map{ |skill| vrp_skills.find_index{ |sk| sk == skill } }.compact + # undefined skills are ignored
             service.sticky_vehicles.flat_map{ |sticky| vrp_skills.find_index{ |sk| sk == sticky.id } }.compact,
           # priority: service.priority,
-          time_windows: service.activity.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**52] },
+          time_windows: service.activity.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**30] },
           delivery: vrp_units.map{ |unit| service.quantities.find{ |quantity| quantity.unit.id == unit.id && quantity.value.negative? }&.value&.to_i || 0 },
           anykey: vrp_units.map{ |unit| service.quantities.find{ |quantity| quantity.unit.id == unit.id && quantity.value.positive? }&.value&.to_i || 0 }
         }.delete_if{ |k, v|
@@ -291,7 +291,7 @@ module Wrappers
       }
       problem[:shipments] = vrp.shipments.map.with_index{ |shipment, index|
         {
-          amount: vrp_units.map{ |unit| shipment.quantities.find{ |quantity| quantity.unit.id == unit.id && quantity.value.positive? }&.value&.to_i || 0 },
+          amount: vrp_units.map{ |unit| shipment.quantities.find{ |quantity| quantity.unit.id == unit.id && quantity.value&.positive? }&.value&.to_i || 0 },
           skills: shipment.skills.flat_map{ |skill| vrp_skills.find_index{ |sk| sk == skill } }.compact + # undefined skills are ignored
             shipment.sticky_vehicles.flat_map{ |sticky| vrp_skills.find_index{ |sk| sk == sticky.id } }.compact,
           priority: shipment.priority,
@@ -299,13 +299,13 @@ module Wrappers
             id: vrp.services.size + index * 2,
             service: shipment.pickup.duration,
             location_index: points[shipment.pickup.point_id].matrix_index,
-            time_windows: shipment.pickup.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**52] }
+            time_windows: shipment.pickup.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**30] }
           }.delete_if{ |_k, v| v.nil? || v.is_a?(Array) && v.empty? },
           delivery: {
             id: vrp.services.size + index * 2 + 1,
             service: shipment.delivery.duration,
             location_index: points[shipment.delivery.point_id].matrix_index,
-            time_windows: shipment.delivery.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**52] }
+            time_windows: shipment.delivery.timewindows.map{ |timewindow| [timewindow.start || 0, timewindow.end || 2**30] }
           }.delete_if{ |_k, v| v.nil? || v.is_a?(Array) && v.empty? }
         }.delete_if{ |_k, v|
           v.nil? || v.is_a?(Array) && v.empty?
