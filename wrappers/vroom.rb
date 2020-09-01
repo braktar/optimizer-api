@@ -205,12 +205,13 @@ module Wrappers
 
     def read_shipment(vrp, vehicle, step)
       shipment = vrp.shipments[((step['id'] - vrp.services.size) / 2).floor]
-      activity = ((step['id'] - vrp.services.size) % 2).zero? ? shipment.pickup : shipment.delivery
+      type = ((step['id'] - vrp.services.size) % 2).zero? ? 'pickup' : 'delivery'
+      activity = type == 'pickup' ? shipment.pickup : shipment.delivery
       point = activity.point
       route_data = compute_route_data(vrp, point, step)
       job_data = {
-        pickup_shipment_id: step['type'] == 'pickup' && shipment.id,
-        delivery_shipment_id: step['type'] == 'delivery' && shipment.id,
+        pickup_shipment_id: type == 'pickup' && shipment.id,
+        delivery_shipment_id: type == 'delivery' && shipment.id,
         point_id: point.id,
         detail: build_detail(shipment, activity, point, nil, vehicle)
       }.merge(route_data).delete_if{ |_k, v| v.nil? || v == false }
