@@ -103,18 +103,9 @@ module Wrappers
         }
       }
 
-      unassigned_jobs = result['unassigned'].map{ |step| step['id'] }.compact
-      unassigneds = unassigned_jobs.map{ |id|
-        service = vrp.services[id]
-        point = service.activity.point
-        {
-          service_id: service.id,
-          point_id: point.id,
-          detail: build_detail(service, service.activity, point, nil, nil)
-        }
-      }
+      unassigneds = result['unassigned'].map{ |step| read_unassigned(vrp, step) }
 
-      log 'Solution cost: ' + cost.to_s + ' & unassigned: ' + unassigned_jobs.size.to_s, level: :info
+      log 'Solution cost: ' + cost.to_s + ' & unassigned: ' + unassigneds.size.to_s, level: :info
 
       {
         cost: cost,
@@ -167,6 +158,15 @@ module Wrappers
       end
     end
 
+    def read_unassigned(vrp, step)
+      id = step['id']
+      if id < vrp.services.size
+        read_job(vrp, nil, step)
+      else
+        read_shipment(vrp, nil, step)
+      end
+    end
+
     def read_break(step)
       original_rest = @rest_hash.find{ |_key, value| value[:index] == step['id'] }.last[:rest]
       begin_time = step['arrival'] + step['waiting_time']
@@ -193,37 +193,41 @@ module Wrappers
     def read_job(vrp, vehicle, step)
       service = vrp.services[step['id']]
       point = service.activity.point
-      begin_time = step['arrival'] + step['waiting_time']
+      route_data = compute_route_data(vrp, point, step)
       job_data = {
         service_id: service.id,
         point_id: point.id,
-        begin_time: begin_time,
-        departure_time: begin_time + step['service'],
-        travel_time: (@previous && point.matrix_index && vrp.matrices[0][:time] ? vrp.matrices[0][:time][@previous.matrix_index][point.matrix_index] : 0),
-        travel_distance: (@previous && point.matrix_index && vrp.matrices[0][:distance] ? vrp.matrices[0][:distance][@previous.matrix_index][point.matrix_index] : 0),
         detail: build_detail(service, service.activity, point, nil, vehicle)
-      }.delete_if{ |_k, v| v.nil? }
+      }.merge(route_data).delete_if{ |_k, v| v.nil? }
       @previous = point
       job_data
     end
 
     def read_shipment(vrp, vehicle, step)
       shipment = vrp.shipments[((step['id'] - vrp.services.size) / 2).floor]
-      activity = step['type'] == 'pickup' ? shipment.pickup : shipment.delivery
+      activity = ((step['id'] - vrp.services.size) % 2).zero? ? shipment.pickup : shipment.delivery
       point = activity.point
-      begin_time = step['arrival'] + step['waiting_time']
+      route_data = compute_route_data(vrp, point, step)
       job_data = {
         pickup_shipment_id: step['type'] == 'pickup' && shipment.id,
         delivery_shipment_id: step['type'] == 'delivery' && shipment.id,
         point_id: point.id,
+        detail: build_detail(shipment, activity, point, nil, vehicle)
+      }.merge(route_data).delete_if{ |_k, v| v.nil? || v == false }
+      @previous = point
+      job_data
+    end
+
+    def compute_route_data(vrp, point, step)
+      return {} if step['type'].nil?
+
+      begin_time = step['arrival'] + step['waiting_time']
+      {
         begin_time: begin_time,
         departure_time: begin_time + step['service'],
         travel_time: (@previous && point.matrix_index && vrp.matrices[0][:time] ? vrp.matrices[0][:time][@previous.matrix_index][point.matrix_index] : 0),
         travel_distance: (@previous && point.matrix_index && vrp.matrices[0][:distance] ? vrp.matrices[0][:distance][@previous.matrix_index][point.matrix_index] : 0),
-        detail: build_detail(shipment, activity, point, nil, vehicle)
-      }.delete_if{ |_k, v| v.nil? || v == false }
-      @previous = point
-      job_data
+      }
     end
 
     def build_rest(rest)
@@ -261,7 +265,10 @@ module Wrappers
               time_windows: rest.timewindows.map{ |tw| [tw&.start || 0, tw&.end || 2**52] }
             }
           }
-        }.delete_if{ |_k, v| v.nil? || v.is_a?(Array) && v.empty? }
+        }.delete_if{ |k, v|
+          v.nil? || v.is_a?(Array) && v.empty? ||
+            k == :time_window && v.first.zero? && v.last == 2**52
+        }
       }
       problem[:jobs] = vrp.services.map.with_index{ |service, index|
         # Activity is mandatory

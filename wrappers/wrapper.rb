@@ -498,8 +498,8 @@ module Wrappers
       vrp.routes.empty? || !vrp.schedule_range_indices || vrp.preprocessing_first_solution_strategy.to_a.include?('periodic')
     end
 
-    def assert_small_minimum_duration
-      vrp.resolution_minimum_duration / vrp.vehicles.size < 5000
+    def assert_small_minimum_duration(vrp)
+      vrp.resolution_minimum_duration.nil? || vrp.resolution_minimum_duration / vrp.vehicles.size < 5000
     end
 
     def solve_synchronous?(_vrp)
