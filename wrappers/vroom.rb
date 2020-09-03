@@ -101,7 +101,7 @@ module Wrappers
           vehicle_id: vehicle.id,
           activities: activities,
           start_time: activities.first[:begin_time],
-          end_time: activities.first[:begin_time] + route['duration'],
+          end_time: activities.last[:begin_time] + (activities.last[:duration] || 0),
         }
       }
 
@@ -187,8 +187,8 @@ module Wrappers
       @previous = point
       {
         point_id: point.id,
-        detail: build_detail(nil, nil, point, nil, vehicle),
-        begin_time: step['arrival']
+        begin_time: step['arrival'],
+        detail: build_detail(nil, nil, point, nil, vehicle)
       }.delete_if{ |_k, v| v.nil? }
     end
 
