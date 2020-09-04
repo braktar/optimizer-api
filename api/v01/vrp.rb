@@ -43,14 +43,16 @@ module Api
         _split, separator = [[split_comma, ',', split_comma.size], [split_semicolon, ';', split_semicolon.size], [split_tab, "\t", split_tab.size]].max_by{ |a| a[2] }
         CSV.parse(object.force_encoding('utf-8'), col_sep: separator, headers: true).collect{ |row|
           r = row.to_h
+          new_r = r.clone
 
           r.each_key{ |key|
             next unless key.include?('.')
 
             part = key.split('.', 2)
-            r.deep_merge!(part[0] => { part[1] => r[key] })
-            r.delete(key)
+            new_r.deep_merge!(part[0] => { part[1] => r[key] })
+            new_r.delete(key)
           }
+          r = new_r
 
           json = r['json']
           if json # Open the secret short cut
