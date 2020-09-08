@@ -32,9 +32,8 @@ module VrpInput
   params :request_object do
     optional(:name, type: String, desc: 'Name of the problem, used as tag for all element in order to name plan when importing returned .csv file')
     optional(:matrices, type: Array, documentation: { desc: 'Define all the distances between each point of problem' }) do use :vrp_request_matrices end
-    use :conditional_vehicle_matrix_definition
 
-    optional(:points, type: Array, documentation: { desc: 'Particular place in the map' }) do use :vrp_request_point end
+    use :conditional_point_matrix_definition # Points definition
 
     optional(:units, type: Array, documentation: { desc: 'The name of a Capacity/Quantity' }) do use :vrp_request_unit end
 
@@ -42,9 +41,7 @@ module VrpInput
 
     optional(:zones, type: Array, desc: '') do use :vrp_request_zone end
 
-    requires(:vehicles, type: Array, documentation: { desc: 'Usually represent a work day of a particular driver/vehicle' }) do
-      use :vrp_request_vehicle
-    end
+    use :conditional_vehicle_matrix_definition # Vehicles definition
 
     optional(:services, type: Array, allow_blank: false, documentation: { desc: 'Independent activity, which does not require a context' }) do
       use :vrp_request_service
@@ -72,6 +69,7 @@ module VrpInput
                       documentation: { hidden: true, format: 'CSV', desc: 'Warning : CSV Format expected here ! Particular place in the map' },
                       coerce_with: ->(path) { Api::V01::CSVParser.call(File.open(path[:tempfile], 'r:bom|utf-8').read, nil) } do
       use :vrp_request_point
+      exactly_one_of :location
     end
 
     optional :units, type: Array,
@@ -390,12 +388,26 @@ module VrpShared
 
   params :vrp_request_point do
     requires(:id, type: String, allow_blank: false)
-    optional(:matrix_index, type: Integer, allow_blank: false, desc: 'Index within the matrices, required if the matrices are already given')
     optional(:location, type: Hash, allow_blank: false, documentation: { desc: 'Location of the point if matrices are not given' }) do
       self.requires(:lat, type: Float, allow_blank: false, desc: 'Latitude coordinate')
       self.requires(:lon, type: Float, allow_blank: false, desc: 'Longitude coordinate')
     end
-    at_least_one_of :matrix_index, :location
+  end
+
+  params :conditional_point_matrix_definition do
+    given matrices: ->(val) { val.nil? || val.empty? } do
+      optional(:points, type: Array, documentation: { desc: 'Particular place in the map' }) do
+        use :vrp_request_point
+        exactly_one_of :location
+      end
+    end
+    given matrices: ->(val) { val && !val.empty? } do
+      optional(:points, type: Array, documentation: { desc: 'Particular place in the map' }) do
+        use :vrp_request_point
+        optional(:matrix_index, type: Integer, allow_blank: false, desc: 'Index within the matrices, required if the matrices are already given')
+        at_least_one_of :matrix_index, :location
+      end
+    end
   end
 
   params :vrp_request_quantity do
