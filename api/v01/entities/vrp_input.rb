@@ -32,6 +32,7 @@ module VrpInput
   params :request_object do
     optional(:name, type: String, desc: 'Name of the problem, used as tag for all element in order to name plan when importing returned .csv file')
     optional(:matrices, type: Array, documentation: { desc: 'Define all the distances between each point of problem' }) do use :vrp_request_matrices end
+    use :conditional_vehicle_matrix_definition
 
     optional(:points, type: Array, documentation: { desc: 'Particular place in the map' }) do use :vrp_request_point end
 
@@ -438,9 +439,6 @@ module VrpVehicles
       as late as possible or let vehicle start at any time. Not available with periodic heuristic, it will always leave as soon as possible.')
     optional(:trips, type: Integer, desc: 'The number of times a vehicle is allowed to return to the depot within its route. Not available with periodic heuristic.')
 
-    optional :matrix_id, type: String, desc: 'Related matrix, if already defined'
-    optional :value_matrix_id, type: String, desc: 'If any value matrix defined, related matrix index'
-
     optional(:duration, types: [String, Float, Integer], desc: 'Maximum tour duration', coerce_with: ->(value) { ScheduleType.type_cast(value, false, false) })
     optional(:overall_duration, types: [String, Float, Integer], documentation: { hidden: true }, desc: '(Scheduling only) If schedule covers several days, maximum work duration over whole period. Not available with periodic heuristic.', coerce_with: ->(value) { ScheduleType.type_cast(value, false, false) })
     optional(:distance, types: Integer, desc: 'Maximum tour distance. Not available with periodic heuristic.')
@@ -492,7 +490,6 @@ module VrpVehicles
 
   params :router_options do
     optional :router_mode, type: String, desc: '`car`, `truck`, `bicycle`, etc... See the Router Wrapper API doc.'
-    exactly_one_of :matrix_id, :router_mode
     optional :router_dimension, type: String, values: ['time', 'distance'], desc: 'time or dimension, choose between a matrix based on minimal route duration or on minimal route distance'
     optional :speed_multiplier, type: Float, default: 1.0, desc: 'Multiplies the vehicle speed, default : 1.0. Specifies if this vehicle is faster or slower than average speed.'
     optional :area, type: Array, coerce_with: ->(c) { c.is_a?(String) ? c.split(/;|\|/).collect{ |b| b.split(',').collect{ |f| Float(f) } } : c }, desc: 'List of latitudes and longitudes separated with commas. Areas separated with pipes (only available for truck mode at this time).'
@@ -513,5 +510,22 @@ module VrpVehicles
     optional :approach, type: Symbol, values: [:unrestricted, :curb], default: :unrestricted, desc: 'Arrive/Leave in the traffic direction'
     optional :snap, type: Float, desc: 'Snap waypoint to junction close by snap distance'
     optional :strict_restriction, type: Boolean, desc: 'Strict compliance with truck limitations'
+  end
+
+  params :conditional_vehicle_matrix_definition do
+    given matrices: ->(val) { val.nil? || val.empty? } do
+      requires(:vehicles, type: Array, documentation: { desc: 'Usually represent a work day of a particular driver/vehicle' }) do
+        use :vrp_request_vehicle
+        exactly_one_of :router_mode
+      end
+    end
+    given matrices: ->(val) { val && !val.empty? } do
+      requires(:vehicles, type: Array, documentation: { desc: 'Usually represent a work day of a particular driver/vehicle' }) do
+        use :vrp_request_vehicle
+        optional :matrix_id, type: String, desc: 'Related matrix, if already defined'
+        optional :value_matrix_id, type: String, desc: 'If any value matrix defined, related matrix index'
+        exactly_one_of :matrix_id, :router_mode
+      end
+    end
   end
 end
