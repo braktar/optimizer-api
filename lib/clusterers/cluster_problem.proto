@@ -1,0 +1,55 @@
+syntax = "proto3";
+package cluster_vrp;
+
+option optimize_for = SPEED;
+
+message Matrix {
+  repeated float time     = 1 [ packed = true ];
+  repeated float distance = 2 [ packed = true ];
+}
+
+message Location {
+  float lat          = 1;
+  float lon          = 2;
+  int32 matrix_index = 3;
+}
+
+message Service {
+  string name                    = 1;
+  repeated int64 quantities      = 2;
+  uint32 duration                = 3;
+  repeated int32 vehicle_indices = 4;
+  Location location              = 5;
+}
+
+message Capacity {
+  float limit = 1;
+  float load = 2;
+ }
+
+message Vehicle {
+  string name                        = 1;
+  repeated Capacity capacities       = 2;
+  Location start_location            = 3;
+  Location end_location              = 4;
+  int64 duration                     = 5;
+  int64 duration_load                = 6;
+}
+
+message Solution {
+  repeated int32 assignement = 1;
+}
+
+message Options {
+  bool intermediate_states = 1;
+  string distance         = 2;
+  int32 cut_index         = 3;
+}
+
+message Problem {
+  Options options             = 1;
+  repeated Vehicle vehicles   = 2;
+  repeated Service services   = 3;
+  repeated Matrix matrices    = 4;
+  repeated Solution solutions = 5;
+}

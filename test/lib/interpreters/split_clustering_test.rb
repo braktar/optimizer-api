@@ -17,6 +17,7 @@
 #
 require './test/test_helper'
 require './lib/interpreters/split_clustering.rb'
+require './wrappers/problem_pb.rb'
 
 class SplitClusteringTest < Minitest::Test
   if !ENV['SKIP_SPLIT_CLUSTERING']
@@ -143,6 +144,13 @@ class SplitClusteringTest < Minitest::Test
       end
     end
 
+    def test_clustering_two_phases
+      vrp = TestHelper.load_vrp(self, fixture_file: 'two_phases_clustering_sched_with_freq_and_same_point_day_5veh')
+      services_vrps_days = Interpreters::SplitClustering.split_balanced_kmeans(service_vrp, 80, cut_symbol: :duration, entity: 'work_day', restarts: @split_restarts)
+
+
+    end
+
     def test_cluster_one_phase_work_day
       skip "This test fails. The test is created for Test-Driven Development.
             The functionality is not ready yet, it is skipped for devs not working on the functionality.
@@ -167,9 +175,116 @@ class SplitClusteringTest < Minitest::Test
       }
       assert o.count{ |i| i } > 0.9 * o.size, "Cluster durations are not balanced: #{durations.inspect}" # TODO: All clusters should be balanced -- i.e., not just 90% of them
     end
-
+focus
     def test_cluster_one_phase_vehicle
-      vrp = TestHelper.load_vrp(self, fixture_file: 'cluster_one_phase')
+      json = VRP.lat_lon_scheduling_two_vehicles
+
+      json[:vehicles].first[:capacities] = [{
+        unit_id: 'kg',
+        limit: 20
+      }]
+
+      json[:services].size.times{ |i|
+        json[:services][i][:quantities] = [{
+          unit_id: 'kg',
+          value: i
+        }]
+      }
+
+
+      json[:vehicles][0][:skills] = [['sk1']]
+      json[:vehicles][1][:skills] = [['sk1']]
+      json[:services][0..8].each{ |service|
+        service[:skills] = ['sk1']
+      }
+
+
+
+       vrp = TestHelper.create(json)
+byebug
+
+      #  vrp = TestHelper.load_vrp(self, fixture_file: 'two_phases_clustering_sched_with_freq_and_same_point_day_5veh')
+      ##############
+
+      # vrp = TestHelper.load_vrp(self, fixture_file: 'scheduling_with_post_process')
+      # vrp = TestHelper.load_vrp(self, fixture_file: 'ortools_global_six_routes_without_rest')
+      matrix_ids = vrp.matrices.collect(&:id)
+      vehicle_worktimes = vrp.total_work_times
+      #  vrp.total_work_times
+      vehicles = vrp.vehicles.collect.with_index{ |vehicle, index|
+        Problem::Vehicle.new(
+          name: vehicle.id,
+          capacities: vrp.units.collect{ |unit|
+            q = vehicle.capacities.find{ |capacity| capacity.unit == unit }
+            Problem::Capacity.new(
+              limit: (q && q.limit && q.limit < 1e+22) ? q.limit : -1
+            )
+          },
+          start_location: Problem::Location.new(
+            latitude: vehicle.start_point.location.lat,
+            longitude: vehicle.start_point.location.lon,
+            matrix_index: vehicle.start_point.matrix_index
+          ),
+          end_location: Problem::Location.new(
+            latitude: vehicle.end_point.location.lat,
+            longitude: vehicle.end_point.location.lon,
+            matrix_index: vehicle.end_point.matrix_index
+          ),
+          duration: vehicle_worktimes[index],
+          day_indices: vrp.vehicles[index].sequence_timewindows.collect(&:day_index),
+          matrix_index: matrix_ids.find_index(vehicle.matrix_id),
+          skills: vehicle.skills.first,
+          #id: vehicle.id
+        )
+      }
+      matrices = vrp.matrices.collect{ |matrix|
+        Problem::Matrix.new(
+          time: matrix[:time] ? matrix[:time].flatten : [],
+          distance: matrix[:distance] ? matrix[:distance].flatten : []
+        )
+      }
+
+      services = vrp.services.collect.with_index{ |service, index|
+        Problem::Service.new(
+          quantities: vrp.units.collect{ |unit|
+            q = service.quantities.find{ |quantity| quantity.unit == unit }
+              q&.value || 0
+          },
+          duration: service.activity.duration,
+          matrix_index: service.activity.point.matrix_index,
+          skills: service.skills,
+          location: Problem::Location.new(
+            latitude: service.activity.point.location.lat,
+            longitude: service.activity.point.location.lon,
+            matrix_index: service.activity.point.matrix_index
+          ),
+          #id: service.id,
+          name: service.id,
+          day_indices: vrp.services[index].sticky_vehicles.collect.with_index{ |time, i|
+            time[i].sequence_timewindows.collect(&:day_index)
+          },
+        )
+      }
+
+      options = Problem::Options.new(
+        max_iteration: 2,
+        cut_index: 0,
+        cut_ratio: 0.9
+      )
+
+      problem = Problem::Problem.new(
+        vehicles: vehicles,
+        services: services,
+        matrices: matrices,
+        unit_labels: vrp.units.collect{ |unit| unit.id },
+        options: options
+
+      )
+
+      input = File.new("../BalancedVRPClustering/instance-13.bin", "w")
+      input.write(Problem::Problem.encode(problem))
+      input.close
+      exit
 
       service_vrp = { vrp: vrp, service: :demo }
 
@@ -710,8 +825,10 @@ class SplitClusteringTest < Minitest::Test
       services_unassigned = []
       reason_unassigned = []
       vrp = Marshal.dump(TestHelper.load_vrp(self)) # call load_vrp only once to not to dump for each restart
+      byebug
       (1..@regularity_restarts).each{ |trial|
         puts "Regularity trial: #{trial}/#{@regularity_restarts}"
+        byebug
         result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, Marshal.load(vrp), nil) # rubocop: disable Security/MarshalLoad
         visits_unassigned << result[:unassigned].size
         unassigned_service_ids = result[:unassigned].collect{ |unassigned| unassigned[:original_service_id] }

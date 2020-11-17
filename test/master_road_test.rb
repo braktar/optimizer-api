@@ -1,0 +1,46 @@
+require './test/test_helper'
+
+class MasterRoadTest < Minitest::Test
+  def test_simple_cut
+    problem = VRP.lat_lon_capacitated
+    problem[:vehicles] += [{
+      id: 'vehicle_1',
+      matrix_id: 'm1',
+      start_point_id: 'point_0',
+      end_point_id: 'point_0',
+      router_dimension: 'distance',
+      capacities: [{
+        unit_id: 'kg',
+        limit: 2
+      }]
+    }, {
+      id: 'vehicle_2',
+      matrix_id: 'm1',
+      start_point_id: 'point_0',
+      end_point_id: 'point_0',
+      router_dimension: 'distance',
+      capacities: [{
+        unit_id: 'kg',
+        limit: 5
+      }]
+    }]
+
+    nb_clusters = 2
+    sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    assert_equal nb_clusters, sub_problems.size
+    sub_problems.each{ |sub_problem|
+      sub_quantity = sub_problem[:vrp].services.map{ |s| s.quantities.first.value }.sum
+      sub_capacity = sub_problem[:vrp].vehicles.map{ |v| v.capacities.first.limit }.sum / nb_clusters
+      assert sub_quantity <= sub_capacity, "quantity #{sub_quantity} is expected to be less or equal to the capacity #{sub_capacity}"
+    }
+
+    nb_clusters = 3
+    sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    assert_equal nb_clusters, sub_problems.size
+    sub_problems.each{ |sub_problem|
+      sub_quantity = sub_problem[:vrp].services.map{ |s| s.quantities.first.value }.sum
+      sub_capacity = sub_problem[:vrp].vehicles.first.capacities.first.limit
+      assert sub_quantity <= sub_capacity, "quantity #{sub_quantity} is expected to be less or equal to the capacity #{sub_capacity}"
+    }
+  end
+end

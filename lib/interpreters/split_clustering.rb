@@ -22,6 +22,7 @@ include Ai4r::Clusterers
 require 'balanced_vrp_clustering'
 
 require './lib/clusterers/average_tree_linkage.rb'
+require './lib/clusterers/road_black_box.rb'
 require './lib/helper.rb'
 require './lib/interpreters/periodic_visits.rb'
 require './lib/output_helper.rb'
@@ -364,6 +365,71 @@ module Interpreters
       raise 'Incorrect split in kmeans_process' if clusters.size > nb_clusters # it should be never more
 
       [clusters, centroids_characteristics]
+    end
+
+    def self.merge_vehicles(vrp, nb_clusters)
+      capacities = Hash.new { 0 }
+
+      if vrp.vehicles.size == nb_clusters
+        unless vrp.vehicles.all?(&:duration)
+          vrp.vehicles.each{ |vehicle|
+            vehicle.duration = [vehicle.duration, (vehicle.timewindow&.end || 2**31) - (vehicle.timewindow&.start || 0), 2**32].compact.min
+          }
+        end
+        return vrp.vehicles
+      end
+      return vrp.vehicles if vrp.vehicles.size == nb_clusters
+
+      # Single depot scenario
+      start_point = vrp.vehicles.first.start_point
+      end_point = vrp.vehicles.first.end_point
+      vrp.vehicles.each{ |vehicle|
+        vehicle.capacities.each{ |capacity|
+          capacities[capacity.unit.id] += capacity.limit
+        }
+      }
+      total_time = vrp.vehicles.map{ |vehicle|
+        [vehicle.duration, (vehicle.timewindow&.end || 2**31) - (vehicle.timewindow&.start || 0), 2**32].compact.min
+      }.sum
+
+      (1..nb_clusters).map{ |index|
+        vehicle = Models::Vehicle.new(id: "Merged_vehicle-#{index}")
+        vehicle.start_point = start_point
+        vehicle.end_point = end_point
+        vehicle.capacities = capacities.map{ |key, value|
+          Models::Capacity.new(unit_id: key, limit: value / nb_clusters)
+        }
+        vehicle.duration = total_time / nb_clusters
+        vehicle
+      }
+    end
+
+    def self.split_road_black_box(service_vrp, nb_clusters, options = {}, &block)
+      log '--> split_road_black_box', level: :debug
+
+      vrp = service_vrp[:vrp]
+      if vrp.shipments.all?{ |shipment| shipment&.pickup&.point&.location && shipment&.delivery&.point&.location } &&
+         vrp.services.all?{ |service| service&.activity&.point&.location } && vrp.vehicles.size > 1
+
+        # vrp.compute_matrix if vrp.matrices.empty?
+
+        tic = Time.now
+
+        clu_vrp = Models::Vrp.new({})
+
+        clu_vrp.services = vrp.services
+        clu_vrp.units = vrp.units
+        clu_vrp.vehicles = merge_vehicles(vrp, nb_clusters)
+
+        clusters, loads = Clusterers::RoadBlackBox.build(clu_vrp, cut_symbol: options[:cut_symbol])
+        toc = Time.now
+        log "Road Black Box (#{toc - tic}sec): split #{vrp.services.size} into #{clusters.map.with_index{ |c, ind| "#{c.size}(#{loads[ind]})" }.join(' & ')}"
+
+        partial_service_vrps = clusters.map.with_index{ |cluster, cluster_index|
+          build_partial_service_vrp(service_vrp, cluster.map(&:id), [cluster_index])
+        }
+
+      end
     end
 
     def self.split_balanced_kmeans(service_vrp, nb_clusters, options = {}, &block)
