@@ -68,4 +68,23 @@ class MasterRoadTest < Minitest::Test
     sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
     assert_equal nb_clusters, sub_problems.size
   end
+
+  def test_basic_split_road
+    problem = VRP.lat_lon
+    problem[:configuration][:preprocessing] ||= {}
+    problem[:configuration][:preprocessing][:partitions] = [{
+          method: 'road_black_box',
+          metric: 'duration',
+          entity: 'vehicle'
+        }]
+    problem[:vehicles] << {
+      id: 'vehicle_1',
+      matrix_id: 'm1',
+      start_point_id: 'point_0',
+      end_point_id: 'point_0',
+      router_dimension: 'distance',
+    }
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, TestHelper.create(problem), nil)
+    assert result
+  end
 end

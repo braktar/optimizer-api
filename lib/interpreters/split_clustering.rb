@@ -93,6 +93,15 @@ module Interpreters
           cut_symbol = (partition[:metric] == :duration || partition[:metric] == :visits || vrp.units.any?{ |unit| unit.id.to_sym == partition[:metric] }) ? partition[:metric] : :duration
 
           case partition[:method]
+          when 'road_black_box'
+            raise OptimizerWrapper::UnsupportedProblemError, "Unknown partition entity :work_day for road_black_box" if partition[:entity] == :work_day
+
+            generated_service_vrps = current_service_vrps.collect.with_index{ |s_v, s_v_i|
+              block&.call(nil, nil, nil, "clustering phase #{partition_index + 1}/#{partitions.size} - step #{s_v_i + 1}/#{current_service_vrps.size}", nil, nil, nil)
+              split_road_black_box(s_v, vrp.vehicles.size, cut_symbol: cut_symbol)
+            }
+            current_service_vrps = generated_service_vrps.flatten
+
           when 'balanced_kmeans'
             generated_service_vrps = current_service_vrps.collect.with_index{ |s_v, s_v_i|
               block&.call(nil, nil, nil, "clustering phase #{partition_index + 1}/#{partitions.size} - step #{s_v_i + 1}/#{current_service_vrps.size}", nil, nil, nil)
@@ -120,6 +129,8 @@ module Interpreters
         cut_symbol = (vrp.preprocessing_partition_metric == :duration || vrp.preprocessing_partition_metric == :visits ||
           vrp.units.any?{ |unit| unit.id.to_sym == vrp.preprocessing_partition_metric }) ? vrp.preprocessing_partition_metric : :duration
         case vrp.preprocessing_partition_method
+        when 'road_black_box'
+          split_road_black_box(service_vrp, vrp.vehicles.size, cut_symbol: cut_symbol)
         when 'balanced_kmeans'
           split_balanced_kmeans(service_vrp, vrp.vehicles.size, cut_symbol: cut_symbol)
         when 'hierarchical_tree'
