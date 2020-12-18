@@ -43,4 +43,29 @@ class MasterRoadTest < Minitest::Test
       assert sub_quantity <= sub_capacity, "quantity #{sub_quantity} is expected to be less or equal to the capacity #{sub_capacity}"
     }
   end
+
+  def test_cluster_one_phase_vehicle
+    problem = VRP.lat_lon_scheduling_two_vehicles
+
+    problem[:vehicles].first[:capacities] = [{
+      unit_id: 'kg',
+      limit: 20
+    }]
+
+    problem[:services].size.times{ |i|
+      problem[:services][i][:quantities] = [{
+        unit_id: 'kg',
+        value: i
+      }]
+    }
+
+    problem[:vehicles][0][:skills] = [['sk1']]
+    problem[:vehicles][1][:skills] = [['sk1']]
+    problem[:services][0..8].each{ |service|
+      service[:skills] = ['sk1']
+    }
+    nb_clusters = 5
+    sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    assert_equal nb_clusters, sub_problems.size
+  end
 end
