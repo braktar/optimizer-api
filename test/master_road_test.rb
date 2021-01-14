@@ -92,4 +92,60 @@ class MasterRoadTest < Minitest::Test
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, TestHelper.create(problem), nil)
     assert result
   end
+
+  def test_homegeneous_fleet
+    vrp = TestHelper.load_vrp(self, fixture_file: 'road_46stops_1depot-4vehicles_60units')
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert result
+    assert_equal 4, result[:routes].size
+    assert_equal 0, result[:unassigned].size
+  end
+
+  def test_various_capacities
+    vrp = TestHelper.load_vrp(self, fixture_file: 'road_46stops_1depot-4vehicle_various_capacities')
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert result
+    assert_equal 4, result[:routes].size
+    assert_equal 0, result[:unassigned].size
+  end
+
+  def test_2vehicles_2depots
+    vrp = TestHelper.load_vrp(self, fixture_file: 'road_46stops_2vehicles_120units_2depots')
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert result
+    assert_equal 2, result[:routes].size
+    assert_equal 0, result[:unassigned].size
+  end
+
+  def test_4vehicles_2depots
+    vrp = TestHelper.load_vrp(self, fixture_file: 'road_46stops_4vehicles_60units_2depots')
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert result
+    assert_equal 4, result[:routes].size
+    assert_equal 0, result[:unassigned].size
+  end
 end

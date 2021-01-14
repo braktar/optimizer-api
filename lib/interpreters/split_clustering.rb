@@ -428,6 +428,7 @@ module Interpreters
 
         clu_vrp = Models::Vrp.new({})
 
+        clu_vrp.name = vrp.name
         clu_vrp.services = vrp.services
         clu_vrp.units = vrp.units
         clu_vrp.vehicles = merge_vehicles(vrp, nb_clusters)
