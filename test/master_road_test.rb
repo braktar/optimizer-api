@@ -1,4 +1,5 @@
 require './test/test_helper'
+require './test/master_road_helper'
 
 class MasterRoadTest < Minitest::Test
   def test_simple_cut
@@ -27,6 +28,7 @@ class MasterRoadTest < Minitest::Test
 
     nb_clusters = 2
     sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    MasterRoadHelper.generate_files(sub_problems, 'simple_cut_2_clusters')
     assert_equal nb_clusters, sub_problems.size
     sub_problems.each{ |sub_problem|
       sub_quantity = sub_problem[:vrp].services.map{ |s| s.quantities.first.value }.sum
@@ -36,6 +38,7 @@ class MasterRoadTest < Minitest::Test
 
     nb_clusters = 3
     sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    MasterRoadHelper.generate_files(sub_problems, 'simple_cut_3_clusters')
     assert_equal nb_clusters, sub_problems.size
     sub_problems.each{ |sub_problem|
       sub_quantity = sub_problem[:vrp].services.map{ |s| s.quantities.first.value }.sum
@@ -66,6 +69,8 @@ class MasterRoadTest < Minitest::Test
     }
     nb_clusters = 5
     sub_problems = Interpreters::SplitClustering.split_road_black_box({ vrp: TestHelper.create(problem) }, nb_clusters, { debug: true, cut_symbol: 'kg' })
+    MasterRoadHelper.generate_files(sub_problems, 'cluster_one_phase_vehicle_5_clusters')
+
     assert_equal nb_clusters, sub_problems.size
   end
 

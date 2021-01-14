@@ -1,12 +1,14 @@
 require './test/test_helper'
 
 class MasterRoadHelper
-  def self.generate_files(problem, file_name, solution_index)
-    file_name = ("generated_clusters-#{file_name}-#{solution_index}").parameterize
+  def self.generate_files(problems, file_name)
+    file_name = ("generated_clusters-#{file_name}").parameterize
 
     polygons = []
-    all_service_vrps.each_with_index{ |service_vrp, cluster_index|
+    points = []
+    problems.each_with_index{ |service_vrp, cluster_index|
       polygons << collect_hulls(service_vrp) # unless service_vrp[:vrp].services.empty? -----> possible to get here if cluster empty ??
+      points += collect_points(service_vrp)
       service_vrp[:vrp].services.each{ |service|
         csv_lines << csv_line(service_vrp[:vrp], service, cluster_index, two_stages)
       }
@@ -14,7 +16,7 @@ class MasterRoadHelper
 
     Api::V01::APIBase.dump_vrp_dir.write(file_name + '_geojson', {
       type: 'FeatureCollection',
-      features: polygons.compact
+      features: polygons.compact + points.compact
     }.to_json)
 
     csv_string = CSV.generate do |out_csv|
@@ -25,7 +27,7 @@ class MasterRoadHelper
     file_name
   end
 
-  def self.collect_hulls(services)
+  def self.collect_hulls(service_vrp)
     vector = service_vrp[:vrp].services.collect{ |service|
       [service.activity.point.location.lon, service.activity.point.location.lat]
     }
@@ -51,6 +53,21 @@ class MasterRoadHelper
       geometry: {
         type: 'Polygon',
         coordinates: [hull + [hull.first]]
+      }
+    }
+  end
+
+  def self.collect_points(service_vrp)
+    service_vrp[:vrp].services.map{ |service|
+      {
+        type: 'Feature',
+        properties: service.quantities.map{ |quantity|
+          [quantity.unit.id, quantity.value]
+        }.to_h,
+        geometry: {
+          type: 'Point',
+          coordinates: [service.activity.point.location.lon, service.activity.point.location.lat]
+        }
       }
     }
   end
