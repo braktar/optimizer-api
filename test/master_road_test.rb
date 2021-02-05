@@ -173,4 +173,29 @@ class MasterRoadTest < Minitest::Test
       route[:activities]&.count{ |activity| activity[:service_id] }
     }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
   end
+
+  # 1714 services
+    focus
+  def test_dicho_instance
+    # Do not merge vehicles
+    vrp = TestHelper.load_vrp(self, fixture_file: 'cluster_dichotomious')
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    # Merge the vehicles
+    # Should call recursively the partition method
+    # Until the subproblems are smaller than max_split_size
+    vrp = TestHelper.load_vrp(self, fixture_file: 'cluster_dichotomious')
+    vrp.name = 'road_dicho_instance'
+    vrp.vehicles.each{ |vehicle| vehicle.cost_fixed = 100 }
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert vrp.services.size, result[:routes].map{ |route|
+      route[:activities]&.count{ |activity| activity[:service_id] }
+    }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
+  end
 end

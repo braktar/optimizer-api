@@ -154,7 +154,7 @@ module Interpreters
                           vrp.services.select{ |service| service.quantities.any?(&:empty) }).uniq
       vrp.services -= empties_or_fills
       sub_service_vrps = if vrp.name.include?('road')
-                          split_road_black_box(service_vrp, 2, cut_symbol: vrp.units.first.id)
+                          split_road_black_box(service_vrp, 2)
                         else
                           split_balanced_kmeans(service_vrp, 2, basic_split: true)
                         end
@@ -411,8 +411,9 @@ module Interpreters
         vehicle.start_point = start_point
         vehicle.end_point = end_point
         vehicle.capacities = capacities.map{ |key, value|
-          Models::Capacity.new(unit_id: key, limit: value / nb_clusters)
-        }
+          vrp_unit = vrp.units.find{ |unit| unit.id == key }
+          Models::Capacity.new(unit: vrp_unit, limit: value / nb_clusters) if value
+        }.compact
         vehicle.duration = total_time / nb_clusters
         vehicle
       }
