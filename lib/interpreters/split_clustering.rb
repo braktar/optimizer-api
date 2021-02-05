@@ -98,7 +98,7 @@ module Interpreters
 
             generated_service_vrps = current_service_vrps.collect.with_index{ |s_v, s_v_i|
               block&.call(nil, nil, nil, "clustering phase #{partition_index + 1}/#{partitions.size} - step #{s_v_i + 1}/#{current_service_vrps.size}", nil, nil, nil)
-              split_road_black_box(s_v, vrp.vehicles.size, cut_symbol: cut_symbol)
+              split_road_black_box(s_v, vrp.vehicles.size, cut_symbol: cut_symbol, entity: partition[:entity])
             }
             current_service_vrps = generated_service_vrps.flatten
 
@@ -153,8 +153,11 @@ module Interpreters
       empties_or_fills = (vrp.services.select{ |service| service.quantities.any?(&:fill) } +
                           vrp.services.select{ |service| service.quantities.any?(&:empty) }).uniq
       vrp.services -= empties_or_fills
-      sub_service_vrps = split_balanced_kmeans(service_vrp, 2, basic_split: true)
-
+      sub_service_vrps = if vrp.name.include?('road')
+                          split_road_black_box(service_vrp, 2, cut_symbol: vrp.units.first.id)
+                        else
+                          split_balanced_kmeans(service_vrp, 2, basic_split: true)
+                        end
       result = []
       sub_service_vrps.sort_by{ |sub_service_vrp| -sub_service_vrp[:vrp].services.size - sub_service_vrp[:vrp].shipments.size * 2 }.each_with_index{ |sub_service_vrp, index|
         sub_vrp = sub_service_vrp[:vrp]
@@ -431,7 +434,7 @@ module Interpreters
         clu_vrp.name = vrp.name
         clu_vrp.services = vrp.services
         clu_vrp.units = vrp.units
-        clu_vrp.vehicles = merge_vehicles(vrp, nb_clusters)
+        clu_vrp.vehicles = options[:entity] == 'vehicle' ? vrp.vehicles.dup : merge_vehicles(vrp, nb_clusters)
 
         clusters, loads = Clusterers::RoadBlackBox.build(clu_vrp, cut_symbol: options[:cut_symbol])
         toc = Time.now

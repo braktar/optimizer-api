@@ -148,4 +148,29 @@ class MasterRoadTest < Minitest::Test
     assert_equal 4, result[:routes].size
     assert_equal 0, result[:unassigned].size
   end
+
+  # 2875 services
+  def test_road_t09decembre2020
+    # Do not merge vehicles
+    vrp = TestHelper.load_vrp(self)
+    vrp.preprocessing_partitions = [{
+      method: 'road_black_box',
+      metric: vrp.units.first.id,
+      entity: 'vehicle'
+    }]
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    assert vrp.services.size, result[:routes].map{ |route|
+      route[:activities]&.count{ |activity| activity[:service_id] }
+    }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
+
+    # Merge the vehicles
+    # Should call recursively the partition method
+    # Until the subproblems are smaller than max_split_size
+    vrp = TestHelper.load_vrp(self)
+    result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+
+    assert vrp.services.size, result[:routes].map{ |route|
+      route[:activities]&.count{ |activity| activity[:service_id] }
+    }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
+  end
 end
