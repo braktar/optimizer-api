@@ -90,17 +90,17 @@ module Clusterers
       input.write(ClusterVrp::Problem.encode(problem))
       input.close
 
-      # cmd = [@@c[:roadblackbox], input.path].join(' ')
-      # log cmd
-      # system(cmd)
+      cmd = [@@c[:roadblackbox], input.path].join(' ')
+      log cmd
+      system(cmd)
 
       indices = nil
       date_time = DateTime.now
       clusters, loads = nil, nil
       unless $CHILD_STATUS.nil?
         if $CHILD_STATUS.exitstatus.zero?
-          content = ClusterVrp.decode(output.read)
-          output.rewind
+          content = ClusterVrp.decode(input.read)
+          input.rewind
           solution_index = 0
           content.solutions.each.with_index{ |solution, solution_index|
             indices = solution.assignment
