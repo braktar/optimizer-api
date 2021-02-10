@@ -15,7 +15,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "cluster_vrp.Service" do
     optional :name, :string, 1
-    repeated :quantities, :int64, 2
+    repeated :quantities, :float, 2
     optional :duration, :uint32, 3
     repeated :vehicle_indices, :int32, 4
     optional :location, :message, 5, "cluster_vrp.Location"

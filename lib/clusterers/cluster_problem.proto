@@ -16,7 +16,7 @@ message Location {
 
 message Service {
   string name                    = 1;
-  repeated int64 quantities      = 2;
+  repeated float quantities      = 2;
   uint32 duration                = 3;
   repeated int32 vehicle_indices = 4;
   Location location              = 5;
