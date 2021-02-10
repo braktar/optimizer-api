@@ -175,7 +175,6 @@ class MasterRoadTest < Minitest::Test
   end
 
   # 1714 services
-    focus
   def test_dicho_instance
     # Do not merge vehicles
     vrp = TestHelper.load_vrp(self, fixture_file: 'cluster_dichotomious')
@@ -197,5 +196,59 @@ class MasterRoadTest < Minitest::Test
     assert vrp.services.size, result[:routes].map{ |route|
       route[:activities]&.count{ |activity| activity[:service_id] }
     }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
+  end
+
+  def test_bordeaux_instances
+    instances = [
+      'Bordeaux-300-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Bordeaux-300-railway-bar_pub_resto-1_instance',
+      'Bordeaux-300-railway-bus_stop_pos_platform-1_instance',
+      'Bordeaux-500-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Bordeaux-500-railway-bar_pub_resto-1_instance',
+      'Bordeaux-500-railway-bus_stop_pos_platform-1_instance'
+    ]
+
+    instances.each{ |file_name|
+      vrp = TestHelper.load_vrp(self, fixture_file: file_name)
+      vrp.name = ['road', file_name].join('-')
+      vrp.preprocessing_max_split_size = 150
+      result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    }
+  end
+
+  def test_lyon_instances
+    instances = [
+      'Lyon-300-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Lyon-300-railway-bar_pub_resto-1_instance',
+      'Lyon-300-railway-bus_stop_pos_platform-1_instance',
+      'Lyon-500-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Lyon-500-railway-bar_pub_resto-1_instance',
+      'Lyon-500-railway-bus_stop_pos_platform-1_instance'
+    ]
+
+    instances.each{ |file_name|
+      vrp = TestHelper.load_vrp(self, fixture_file: file_name)
+      vrp.name = ['road', file_name].join('-')
+      vrp.preprocessing_max_split_size = 150
+      result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    }
+  end
+
+  def test_nantes_instances
+    instances = [
+      'Nantes-300-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Nantes-300-railway-bar_pub_resto-1_instance',
+      'Nantes-300-railway-bus_stop_pos_platform-1_instance',
+      'Nantes-500-railway-bakery_butcher_cheese_greengrocer_seafood_supermarket-1_instance',
+      'Nantes-500-railway-bar_pub_resto-1_instance',
+      'Nantes-500-railway-bus_stop_pos_platform-1_instance',
+    ]
+
+    instances.each{ |file_name|
+      vrp = TestHelper.load_vrp(self, fixture_file: file_name)
+      vrp.name = ['road', file_name].join('-')
+      vrp.preprocessing_max_split_size = 150
+      result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    }
   end
 end
