@@ -99,9 +99,8 @@ module Clusterers
       clusters, loads = nil, nil
       unless $CHILD_STATUS.nil?
         if $CHILD_STATUS.exitstatus.zero?
-          content = ClusterVrp.decode(input.read)
-          input.rewind
-          solution_index = 0
+          output = File.new(input.path, 'r')
+          content = ClusterVrp::Problem.decode(output.read)
           content.solutions.each.with_index{ |solution, solution_index|
             indices = solution.assignment
 
