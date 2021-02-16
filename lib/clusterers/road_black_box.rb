@@ -109,7 +109,7 @@ module Clusterers
             indices.each_with_index{ |cluster_index, index|
               service = vrp.services[index]
               clusters[cluster_index] << service
-              loads[cluster_index] += options[:cut_symbol] == :duration ? service.activity.duration : service.quantities.find{ |q| q.unit_id == options[:cut_symbol] }.value
+              loads[cluster_index] += options[:cut_symbol] == :duration ? service.activity.duration : service.quantities.find{ |q| q.unit_id == options[:cut_symbol] }&.value || 0
             }
             if options[:debug]
               polygons = clusters.map{ |cluster| collect_hulls(cluster) }

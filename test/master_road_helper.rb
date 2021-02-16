@@ -9,19 +9,12 @@ class MasterRoadHelper
     problems.each_with_index{ |service_vrp, cluster_index|
       polygons << collect_hulls(service_vrp) # unless service_vrp[:vrp].services.empty? -----> possible to get here if cluster empty ??
       points += collect_points(service_vrp)
-      service_vrp[:vrp].services.each{ |service|
-        csv_lines << csv_line(service_vrp[:vrp], service, cluster_index, two_stages)
-      }
     }
 
     Api::V01::APIBase.dump_vrp_dir.write(file_name + '_geojson', {
       type: 'FeatureCollection',
       features: polygons.compact + points.compact
     }.to_json)
-
-    csv_string = CSV.generate do |out_csv|
-      csv_lines.each{ |line| out_csv << line }
-    end
 
     log 'Clusters saved: ' + file_name, level: :debug
     file_name
