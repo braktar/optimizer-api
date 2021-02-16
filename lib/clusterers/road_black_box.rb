@@ -101,7 +101,7 @@ module Clusterers
         if $CHILD_STATUS.exitstatus.zero?
           output = File.new(input.path, 'r')
           content = ClusterVrp::Problem.decode(output.read)
-          content.solutions.each.with_index{ |solution, solution_index|
+          content.solutions.each_with_index{ |solution, solution_index|
             indices = solution.assignment
 
             clusters = Array.new(vrp.vehicles.size) { [] }
