@@ -102,11 +102,11 @@ module Clusterers
           output = File.new(input.path, 'r')
           content = ClusterVrp::Problem.decode(output.read)
           content.solutions.each_with_index{ |solution, solution_index|
-            indices = solution.assignment
+            indices = solution.assignement
 
             clusters = Array.new(vrp.vehicles.size) { [] }
             loads = Array.new(vrp.vehicles.size) { 0 }
-            indices.each.with_index{ |cluster_index, index|
+            indices.each_with_index{ |cluster_index, index|
               service = vrp.services[index]
               clusters[cluster_index] << service
               loads[cluster_index] += options[:cut_symbol] == :duration ? service.activity.duration : service.quantities.find{ |q| q.unit_id == options[:cut_symbol] }.value
