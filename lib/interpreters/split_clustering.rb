@@ -294,7 +294,7 @@ module Interpreters
       sub_vrp.points = sub_vrp.points.select{ |p| points_ids.include? p.id }.compact
       sub_vrp.points += sub_vrp.vehicles.flat_map{ |vehicle| [vehicle.start_point, vehicle.end_point] }.compact.uniq
 
-      if !sub_vrp.matrices&.empty?
+      if !sub_vrp.matrices&.empty? && !sub_vrp.vehicles.empty?
         matrix_indices = sub_vrp.points.map{ |point| point.matrix_index }
         update_matrix_index(sub_vrp)
         update_matrix(sub_vrp.matrices, sub_vrp, matrix_indices)
