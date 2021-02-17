@@ -82,4 +82,11 @@ class MasterRoadHelper
       }
     }
   end
+
+  def self.collect_result_metrics(result)
+    details = [result[:cost].round, result[:routes].size, result[:unassigned].size, result[:elapsed].round]
+    log ['cost', 'routes', 'unassigned', 'elapsed'].join(','),  level: :info
+    log details.join(','),  level: :info
+    details
+  end
 end

@@ -444,7 +444,8 @@ module Interpreters
         partial_service_vrps = clusters.map.with_index{ |cluster, cluster_index|
           build_partial_service_vrp(service_vrp, cluster.map(&:id), [cluster_index])
         }
-
+        MasterRoadHelper.generate_files(partial_service_vrps, "#{vrp.name}-#{Time.now}")
+        partial_service_vrps
       end
     end
 

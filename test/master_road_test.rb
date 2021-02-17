@@ -90,6 +90,7 @@ class MasterRoadTest < Minitest::Test
       router_dimension: 'distance',
     }
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, TestHelper.create(problem), nil)
+    MasterRoadHelper.collect_result_metrics(result)
     assert result
   end
 
@@ -105,6 +106,7 @@ class MasterRoadTest < Minitest::Test
     assert result
     assert_equal 4, result[:routes].size
     assert_equal 0, result[:unassigned].size
+    MasterRoadHelper.collect_result_metrics(result)
   end
 
   def test_various_capacities
@@ -119,6 +121,7 @@ class MasterRoadTest < Minitest::Test
     assert result
     assert_equal 4, result[:routes].size
     assert_equal 0, result[:unassigned].size
+    MasterRoadHelper.collect_result_metrics(result)
   end
 
   def test_2vehicles_2depots
@@ -133,6 +136,7 @@ class MasterRoadTest < Minitest::Test
     assert result
     assert_equal 2, result[:routes].size
     assert_equal 0, result[:unassigned].size
+    MasterRoadHelper.collect_result_metrics(result)
   end
 
   def test_4vehicles_2depots
@@ -147,6 +151,7 @@ class MasterRoadTest < Minitest::Test
     assert result
     assert_equal 4, result[:routes].size
     assert_equal 0, result[:unassigned].size
+    MasterRoadHelper.collect_result_metrics(result)
   end
 
   # 2875 services
@@ -158,7 +163,11 @@ class MasterRoadTest < Minitest::Test
       metric: vrp.units.first.id,
       entity: 'vehicle'
     }]
+    vrp.resolution_minimum_duration = 60000
+    vrp.resolution_duration = 600000
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    MasterRoadHelper.collect_result_metrics(result)
+
     assert vrp.services.size, result[:routes].map{ |route|
       route[:activities]&.count{ |activity| activity[:service_id] }
     }.compact.reduce(&:+) + result[:unassigned].count{ |activity| activity[:service_id] }
@@ -167,7 +176,10 @@ class MasterRoadTest < Minitest::Test
     # Should call recursively the partition method
     # Until the subproblems are smaller than max_split_size
     vrp = TestHelper.load_vrp(self)
+    vrp.resolution_minimum_duration = 60000
+    vrp.resolution_duration = 600000
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    MasterRoadHelper.collect_result_metrics(result)
 
     assert vrp.services.size, result[:routes].map{ |route|
       route[:activities]&.count{ |activity| activity[:service_id] }
@@ -184,6 +196,7 @@ class MasterRoadTest < Minitest::Test
       entity: 'vehicle'
     }]
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    MasterRoadHelper.collect_result_metrics(result)
 
     # Merge the vehicles
     # Should call recursively the partition method
@@ -192,6 +205,7 @@ class MasterRoadTest < Minitest::Test
     vrp.name = 'road_dicho_instance'
     vrp.vehicles.each{ |vehicle| vehicle.cost_fixed = 100 }
     result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+    MasterRoadHelper.collect_result_metrics(result)
 
     assert vrp.services.size, result[:routes].map{ |route|
       route[:activities]&.count{ |activity| activity[:service_id] }
@@ -213,6 +227,7 @@ class MasterRoadTest < Minitest::Test
       vrp.name = ['road', file_name].join('-')
       vrp.preprocessing_max_split_size = 150
       result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+      MasterRoadHelper.collect_result_metrics(result)
     }
   end
 
@@ -231,6 +246,7 @@ class MasterRoadTest < Minitest::Test
       vrp.name = ['road', file_name].join('-')
       vrp.preprocessing_max_split_size = 150
       result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+      MasterRoadHelper.collect_result_metrics(result)
     }
   end
 
@@ -249,6 +265,7 @@ class MasterRoadTest < Minitest::Test
       vrp.name = ['road', file_name].join('-')
       vrp.preprocessing_max_split_size = 150
       result = OptimizerWrapper.wrapper_vrp('ortools', { services: { vrp: [:ortools] }}, vrp, nil)
+      MasterRoadHelper.collect_result_metrics(result)
     }
   end
 end
