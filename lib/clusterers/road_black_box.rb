@@ -90,7 +90,7 @@ module Clusterers
       input.write(ClusterVrp::Problem.encode(problem))
       input.close
 
-      cmd = [@@c[:roadblackbox], input.path].join(' ')
+      cmd = [OptimizerWrapper.config[:roadblackbox], input.path].join(' ')
       log cmd
       system(cmd)
 
