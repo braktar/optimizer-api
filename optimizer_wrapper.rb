@@ -257,11 +257,9 @@ module OptimizerWrapper
             proc{ |pids|
               next unless job
 
-              current_solution = Result.get(job) || { pids: nil }
-              current_solution.configuration.csv = cliqued_vrp.restitution_csv
-              current_solution.configuration.geometry = cliqued_vrp.restitution_geometry
-              current_solution[:pids] = pids
-              Result.set(job, current_solution)
+              job_object = Result.get(job) || { pids: [] }
+              job_object[:pids] = pids
+              Result.set(job, job_object)
             }
           ) { |wrapper, avancement, total, _message, cost, _time, solution|
             solution =
@@ -544,32 +542,6 @@ module OptimizerWrapper
       previous_end = route[:activities][seen][:end_time]
       seen += 1
     end
-  end
-
-  def self.provide_day(vrp, route)
-    return unless vrp.schedule?
-
-    route_index = route[:vehicle_id].split('_').last.to_i
-
-    if vrp.schedule_start_date
-      days_from_start = route_index - vrp.schedule_range_indices[:start]
-      route[:day] = vrp.schedule_start_date.to_date + days_from_start
-    else
-      route_index
-    end
-  end
-
-  def self.provide_visits_index(vrp, set)
-    return unless vrp.schedule?
-
-    set.each{ |activity|
-      id = activity[:service_id] || activity[:rest_id] ||
-           activity[:pickup_shipment_id] || activity[:delivery_shipment_id]
-
-      next unless id
-
-      activity[:visit_index] = id.split('_')[-2].to_i
-    }
   end
 
   def self.apply_zones(vrp)

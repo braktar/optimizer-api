@@ -1071,6 +1071,7 @@ module Wrappers
         }
         service.route_activity(
           service_id: "#{data[:id]}_#{data[:number_in_sequence]}_#{service.visits_number}",
+          visit_index: data[:number_in_sequence],
           timing: times,
           index: data[:activity],
           loads: loads
