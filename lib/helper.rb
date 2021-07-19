@@ -63,7 +63,7 @@ module Helper
     111321 * Math.sqrt(delta_lat**2 + delta_lon**2) # 111321 is the length of a degree (of lon and lat) in meters
   end
 
-  def self.replace_routes_in_result(vrp, solution, new_solution)
+  def self.replace_routes_in_result(solution, new_solution)
     # Updates the routes of solution with the ones in new_solution and corrects the total stats
     # TODO: Correct total cost (needs cost per route!!!)
 
