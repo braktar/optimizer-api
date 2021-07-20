@@ -212,7 +212,9 @@ module OptimizerWrapper
       multi_modal = Interpreters::MultiModal.new(vrp, service)
       optim_solution = multi_modal.multimodal_routes
     elsif vrp.vehicles.empty? || vrp.services.empty?
-      unassigned_with_reason = vrp.services.map{ |s| s.route_activity(reason: 'No vehicle available for this service') }
+      unassigned_with_reason = vrp.services.map{ |s|
+        Models::Solution::Step.new(s, reason: 'No vehicle available for this service')
+      }
       optim_solution = vrp.empty_solution(service.to_s, unassigned_with_reason, false)
     else
       services_to_reinject = []
@@ -516,34 +518,6 @@ module OptimizerWrapper
     end
   end
 
-  def self.compute_route_waiting_times(route)
-    seen = 1
-    previous_end =
-      if route[:activities].first[:type] == 'depot'
-        route[:activities].first[:begin_time]
-      else
-        route[:activities].first[:end_time]
-      end
-    route[:activities].first[:waiting_time] = 0
-
-    first_service_seen = true
-    while seen < route[:activities].size
-      considered_setup =
-        if route[:activities][seen][:type] == 'rest'
-          0
-        elsif first_service_seen || route[:activities][seen][:travel_time].positive?
-          route[:activities][seen][:detail][:setup_duration] || 0
-        else
-          0
-        end
-      first_service_seen = false if %w[service pickup delivery].include?(route[:activities][seen][:type])
-      arrival_time = previous_end + (route[:activities][seen][:travel_time] || 0) + considered_setup
-      route[:activities][seen][:waiting_time] = route[:activities][seen][:begin_time] - arrival_time
-      previous_end = route[:activities][seen][:end_time]
-      seen += 1
-    end
-  end
-
   def self.apply_zones(vrp)
     vrp.zones.each{ |zone|
       next if zone.allocations.empty?
@@ -718,34 +692,36 @@ module OptimizerWrapper
 
     new_routes = solution.routes.map{ |route|
       last_point = nil
-      new_activities = route.activities.flat_map.with_index{ |activity, act_index|
+      new_steps = route.steps.flat_map.with_index{ |activity, act_index|
         if activity.service_id
           service_index = original_vrp.services.index{ |s| s.id == activity.service_id }
           cluster_index = clusters.index{ |z| z.data_items.flatten.include? service_index }
           if cluster_index && clusters[cluster_index].data_items.size > 1
             cluster_data_indices = clusters[cluster_index].data_items.collect{ |i| i[0] }
             cluster_services = cluster_data_indices.map{ |index| original_vrp.services[index] }
-            next_point = route.activities[act_index + 1..route.activities.size].find{ |act|
-              act.detail.point
-            }&.detail&.point
+            next_point = route.steps[act_index + 1..route.steps.size].find{ |act|
+              act.activity.point
+            }&.activity&.point
             tsp = TSPHelper.create_tsp(original_vrp,
                                        vehicle: route.vehicle,
                                        services: cluster_services,
                                        start_point: last_point,
                                        end_point: next_point)
             solution = TSPHelper.solve(tsp)
-            last_point = solution.routes[0].activities.reverse.find(&:service_id).detail.point
-            service_ids = solution.routes[0].activities.select{ |a| a.type == :service }.map(&:id).compact
-            service_ids.map{ |service_id| original_vrp.services.find{ |service| service.id == service_id }.route_activity }
+            last_point = solution.routes[0].steps.reverse.find(&:service_id).activity.point
+            service_ids = solution.routes[0].steps.select{ |a| a.type == :service }.map(&:id).compact
+            service_ids.map{ |service_id|
+              Models::Solution::Step.new(original_vrp.services.find{ |service| service.id == service_id })
+            }
           else
             activity
           end
         else
-          last_point = activity.detail.point || last_point
+          last_point = activity.activity.point || last_point
           activity
         end
       }
-      Models::SolutionRoute.new(activities: new_activities, vehicle: route.vehicle)
+      Models::Solution::Route.new(steps: new_steps, vehicle: route.vehicle)
     }
     new_unassigned = solution.unassigned.flat_map{ |un|
       if un.service_id
@@ -753,7 +729,9 @@ module OptimizerWrapper
         cluster_index = clusters.index{ |z| z.data_items.flatten.include? service_index }
         if cluster_index && clusters[cluster_index].data_items.size > 1
           cluster_data_indices = clusters[cluster_index].data_items.collect{ |i| i[0] }
-          cluster_data_indices.map{ |index| original_vrp.services[index].route_activity }
+          cluster_data_indices.map{ |index|
+            Models::Solution::Step.new(original_vrp.services[index])
+          }
         else
           un
         end

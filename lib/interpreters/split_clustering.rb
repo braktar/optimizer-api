@@ -64,7 +64,7 @@ module Interpreters
           next if solution.nil?
 
           solution.routes.each{ |route|
-            route.activities.each do |stop|
+            route.steps.each do |stop|
               next unless stop.service_id
 
               stop.skills = stop.skills.to_a + ["cluster #{cluster_ref}"]
@@ -491,22 +491,22 @@ module Interpreters
     end
 
     def self.remove_empty_routes(solution)
-      solution.routes.delete_if{ |route| route.activities.none?(&:service_id) }
+      solution.routes.delete_if{ |route| route.steps.none?(&:service_id) }
     end
 
     def self.remove_poorly_populated_routes(vrp, solution, limit)
       emptied_routes = false
       solution.routes.delete_if{ |route|
         vehicle = vrp.vehicles.find{ |current_vehicle| current_vehicle.id == route.vehicle_id }
-        loads = route.activities.last.loads
+        loads = route.steps.last.loads
         load_flag = vehicle.capacities.empty? || vehicle.capacities.all?{ |capacity|
           current_load = loads.find{ |unit_load| unit_load.quantity.unit.id == capacity.unit.id }
           current_load.current / capacity.limit < limit if capacity.limit && current_load && capacity.limit > 0
         }
         vehicle_worktime = vehicle.duration ||
                            vehicle.timewindow&.end && (vehicle.timewindow.end - vehicle.timewindow.start)
-        route_duration = route.detail.total_time ||
-                         (route.activities.last.timing.begin_time - route.activities.first.timing.begin_time)
+        route_duration = route.info.total_time ||
+                         (route.steps.last.info.begin_time - route.steps.first.info.begin_time)
         log "route #{route.vehicle.id} time: #{route_duration}/#{vehicle_worktime} percent: " \
             "#{((route_duration / (vehicle_worktime || route_duration).to_f) * 100).to_i}%", level: :info
 
@@ -515,12 +515,12 @@ module Interpreters
         if load_flag && time_flag
           emptied_routes = true
 
-          number_of_services_in_the_route = route.activities.count(&:service_id)
+          number_of_services_in_the_route = route.steps.count(&:service_id)
 
           log "route #{route.vehicle.id} is emptied: #{number_of_services_in_the_route} " \
               'services are now unassigned.', level: :info
 
-          solution.unassigned += route.activities.select(&:service_id)
+          solution.unassigned += route.steps.select(&:service_id)
           true
         end
       }
@@ -1272,16 +1272,6 @@ module Interpreters
           graph[node][:unit_metrics][symbol] -= value_to_remove
           remove_from_upper(graph, graph[node][:parent], symbol, value_to_remove)
         end
-      end
-
-      def remove_used_empties_and_refills(vrp, result)
-        result[:routes].collect{ |route|
-          current_service = nil
-          route[:activities].select{ |activity| activity[:service_id] }.collect{ |activity|
-            current_service = vrp.services.find{ |service| service[:id] == activity[:service_id] }
-            current_service if current_service&.quantities&.any?(&:fill) || current_service&.quantities&.any?(&:empty)
-          }
-        }.flatten
       end
 
       def tree_leafs(graph, node)
