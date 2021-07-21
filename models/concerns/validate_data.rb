@@ -28,6 +28,7 @@ module ValidateData
     @hash = hash
 
     ensure_no_conflicting_skills
+    ensure_uniq_ids
 
     configuration = @hash[:configuration]
     schedule = configuration[:schedule] if configuration
@@ -56,6 +57,20 @@ module ValidateData
       "There are vehicles or services with 'vehicle_partition_*', 'work_day_partition_*' skills. " \
       'These skill patterns are reserved for internal use and they would lead to unexpected behaviour.'
     )
+  end
+
+  def ensure_uniq_ids
+    # Active Hash now can check this, but won't raise in case of identical objects
+    # Due to this PR https://github.com/Mapotempo/active_hash/pull/5
+    # This allows internally to dump/load the vrp/solution directly as json
+    [:matrices, :units, :points, :rests, :zones, :timewindows,
+     :vehicles, :services, :shipments, :subtours].each{ |key|
+      next if @hash[key].to_a.collect{ |v| v[:id] }.uniq!.nil?
+
+      raise OptimizerWrapper::DiscordantProblemError.new(
+        "#{key} ids should be unique"
+      )
+    }
   end
 
   def check_matrices
