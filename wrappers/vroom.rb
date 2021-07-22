@@ -126,7 +126,7 @@ module Wrappers
         routes: routes,
         unassigned: unassigneds
       )
-      solution.parse_solution(vrp)
+      solution.parse(vrp)
     end
 
     private

@@ -493,7 +493,7 @@ module Wrappers
 
       solution = build_solution(vrp, content)
 
-      solution.parse_solution(vrp)
+      solution.parse(vrp)
     end
 
     def run_ortools(problem, vrp, services, points, matrix_indices, thread_proc = nil, &block)
